@@ -254,8 +254,6 @@
     .pip { width: 8px; height: 11px; border-radius: 1.5px; }
     .pip-y { background: #fde047; border: 1px solid #ca8a04; }
     .pip-r { background: #f87171; border: 1px solid #dc2626; }
-    .mc-hint { text-align: center; font-size: 0.57rem; color: #ddd; padding-bottom: 7px; letter-spacing: 0.04em; }
-
     /* ── Cards / Fair Play ── */
     .fp-card {
       background: white; border-radius: 14px; overflow: hidden;
@@ -343,92 +341,6 @@
     }
     .btn-outline:hover { background: #fdf4ff; }
     .api-note { font-size: 0.65rem; color: #aaa; line-height: 1.4; margin-bottom: 14px; }
-
-    /* ── Score Modal ── */
-    .overlay {
-      position: fixed; inset: 0;
-      background: rgba(10,10,30,0.55);
-      z-index: 200;
-      display: flex; align-items: flex-end; justify-content: center;
-      backdrop-filter: blur(3px);
-    }
-    .sheet {
-      background: white; border-radius: 22px 22px 0 0;
-      width: 100%; max-width: 520px;
-      padding: 8px 18px 36px; max-height: 94vh; overflow-y: auto;
-    }
-    .sheet-handle { width: 36px; height: 4px; background: #e5e7eb; border-radius: 2px; margin: 10px auto 16px; }
-    .sheet-hdr { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
-    .sheet-title { font-size: 1rem; font-weight: 800; color: #1a1a2e; }
-    .sheet-time { font-size: 0.67rem; color: #aaa; margin-top: 2px; }
-    .close-btn {
-      width: 30px; height: 30px; border-radius: 50%;
-      background: #f0f0f5; border: none; cursor: pointer;
-      font-size: 0.85rem; color: #888;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .close-btn:hover { background: #e5e5ea; }
-    .result-pill {
-      text-align: center; font-size: 0.74rem; font-weight: 700;
-      padding: 8px; border-radius: 10px; margin: 12px 0;
-    }
-    .rp-h { background: #dcfce7; color: #16a34a; }
-    .rp-a { background: #fee2e2; color: #dc2626; }
-    .rp-d { background: #fef9c3; color: #ca8a04; }
-    .score-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
-    .team-blk { flex: 1; text-align: center; }
-    .tb-name {
-      font-size: 0.77rem; font-weight: 800; color: #334155; line-height: 1.25;
-      margin-bottom: 10px; min-height: 2.4em;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .sc-pick { display: flex; align-items: center; justify-content: center; gap: 10px; }
-    .sc-btn {
-      width: 42px; height: 42px; border-radius: 50%;
-      border: 2px solid #7b2fbe; background: white; color: #7b2fbe;
-      font-size: 1.4rem; font-weight: 700; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.12s;
-    }
-    .sc-btn:hover { background: #7b2fbe; color: white; }
-    .sc-btn:active { transform: scale(0.9); }
-    .sc-btn.dim { border-color: #e5e7eb; color: #ccc; }
-    .sc-btn.dim:hover { background: #f5f5f8; color: #aaa; }
-    .sc-val { font-size: 2.8rem; font-weight: 900; color: #1a1a2e; min-width: 44px; text-align: center; line-height: 1; }
-    .sc-sep { font-size: 1.6rem; font-weight: 300; color: #e5e7eb; }
-    .cards-blk { background: #fafafa; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
-    .cb-hdr { font-size: 0.61rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
-    .cb-icon { width: 11px; height: 16px; border-radius: 2px; }
-    .cb-row { display: flex; justify-content: space-around; }
-    .cb-team { text-align: center; }
-    .cbt-lbl { font-size: 0.65rem; color: #888; margin-bottom: 6px; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .cbt-ctrl { display: flex; align-items: center; gap: 7px; justify-content: center; }
-    .cbt-btn {
-      width: 28px; height: 28px; border-radius: 50%;
-      border: 1.5px solid #e5e7eb; background: white;
-      cursor: pointer; font-size: 0.85rem; font-weight: 700; color: #888;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .cbt-btn:hover { border-color: #aaa; }
-    .cbt-val { font-size: 1.1rem; font-weight: 800; min-width: 22px; text-align: center; }
-    .btn-save {
-      width: 100%; padding: 15px;
-      background: linear-gradient(135deg, #5b1fa8, #7b2fbe);
-      color: white; border: none; border-radius: 12px;
-      font-size: 1rem; font-weight: 800; cursor: pointer;
-      letter-spacing: 0.02em; margin-bottom: 10px;
-      transition: opacity 0.15s;
-    }
-    .btn-save:hover { opacity: 0.93; }
-    .btn-save:active { transform: scale(0.98); }
-    .btn-clear {
-      width: 100%; padding: 11px;
-      background: white; color: #dc2626;
-      border: 1.5px solid #fca5a5;
-      border-radius: 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer;
-    }
-    .btn-clear:hover { background: #fee2e2; }
 
     .footer { text-align: center; padding: 20px 16px 36px; font-size: 0.61rem; color: #ccc; }
 
@@ -752,7 +664,7 @@ function StandingsView({gk, scores}) {
   );
 }
 
-function MatchCard({match, score, onClick}) {
+function MatchCard({match, score}) {
   const played=score?.played;
   const hg=score?.homeGoals||0, ag=score?.awayGoals||0;
   const hy=score?.homeYellow||0, hr=score?.homeRed||0;
@@ -761,11 +673,11 @@ function MatchCard({match, score, onClick}) {
   if(played){if(hg>ag){hCls='win';aCls='loss';}else if(hg<ag){hCls='loss';aCls='win';}}
   const hasPips = hy+hr+ay+ar>0;
   return (
-    <div className="match-card" onClick={onClick}>
+    <div className="match-card" style={{cursor:'default'}}>
       <div className="mc-top">
         <span className="mc-time">⏱ {match.time}</span>
         <div className="mc-status-row">
-          {score?.fromSheets && played && <span className="sheets-tag">⚡ Sheets</span>}
+          {score?.fromSheets && played && <span className="sheets-tag">⚡ Live</span>}
           <span className={`mc-status ${played?'st-final':'st-upcoming'}`}>{played?'Final':'Upcoming'}</span>
         </div>
       </div>
@@ -788,13 +700,11 @@ function MatchCard({match, score, onClick}) {
         </div>
         <div className={`mc-team left ${aCls}`}>{match.away}</div>
       </div>
-      <div className="mc-hint">TAP TO {played?'EDIT':'ENTER'} SCORE</div>
     </div>
   );
 }
 
-function ScheduleView({gk, scores, onScoreChange}) {
-  const [editing, setEditing] = useState(null);
+function ScheduleView({gk, scores}) {
   const grp = GROUPS[gk];
   const played = grp.matches.filter(m=>scores[m.id]?.played).length;
   return (
@@ -803,13 +713,8 @@ function ScheduleView({gk, scores, onScoreChange}) {
         {played}/{grp.matches.length} matches scored · 📍 {grp.location}
       </div>
       {grp.matches.map(m=>(
-        <MatchCard key={m.id} match={m} score={scores[m.id]} onClick={()=>setEditing(m)}/>
+        <MatchCard key={m.id} match={m} score={scores[m.id]}/>
       ))}
-      {editing && (
-        <ScoreModal match={editing} score={scores[editing.id]}
-          onSave={sc=>{onScoreChange(editing.id,sc);setEditing(null);}}
-          onClose={()=>setEditing(null)}/>
-      )}
     </div>
   );
 }
@@ -840,85 +745,6 @@ function CardsView({gk, scores}) {
   );
 }
 
-function CBtn({value, onChange, label, color}) {
-  return (
-    <div className="cb-team">
-      <div className="cbt-lbl" style={{color}} title={label}>{label}</div>
-      <div className="cbt-ctrl">
-        <button className="cbt-btn" onClick={()=>onChange(Math.max(0,value-1))}>−</button>
-        <span className="cbt-val" style={{color}}>{value}</span>
-        <button className="cbt-btn" onClick={()=>onChange(value+1)}>+</button>
-      </div>
-    </div>
-  );
-}
-
-function ScoreModal({match, score, onSave, onClose}) {
-  const init=score||{};
-  const [hg,setHg]=useState(init.homeGoals||0);
-  const [ag,setAg]=useState(init.awayGoals||0);
-  const [hy,setHy]=useState(init.homeYellow||0);
-  const [ay,setAy]=useState(init.awayYellow||0);
-  const [hr,setHr]=useState(init.homeRed||0);
-  const [ar,setAr]=useState(init.awayRed||0);
-  const gd=hg-ag, cgd=Math.max(-CAP,Math.min(CAP,gd));
-  let rLabel='Draw', rCls='rp-d';
-  if(gd>0){rLabel=`${match.home} Win`;rCls='rp-h';}
-  if(gd<0){rLabel=`${match.away} Win`;rCls='rp-a';}
-  const save=()=>onSave({homeGoals:hg,awayGoals:ag,homeYellow:hy,awayYellow:ay,homeRed:hr,awayRed:ar,played:true});
-  const clear=()=>onSave({homeGoals:0,awayGoals:0,homeYellow:0,awayYellow:0,homeRed:0,awayRed:0,played:false});
-  return (
-    <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div className="sheet">
-        <div className="sheet-handle"/>
-        <div className="sheet-hdr">
-          <div><div className="sheet-title">Enter Score</div><div className="sheet-time">⏱ {match.time}</div></div>
-          <button className="close-btn" onClick={onClose}>✕</button>
-        </div>
-        <div className={`result-pill ${rCls}`}>{rLabel} · GD {cgd>0?'+':''}{cgd} (capped ±{CAP})</div>
-        <div className="score-row">
-          <div className="team-blk">
-            <div className="tb-name">{match.home}</div>
-            <div className="sc-pick">
-              <button className={`sc-btn${hg===0?' dim':''}`} onClick={()=>setHg(Math.max(0,hg-1))}>−</button>
-              <div className="sc-val">{hg}</div>
-              <button className="sc-btn" onClick={()=>setHg(hg+1)}>+</button>
-            </div>
-          </div>
-          <div className="sc-sep">–</div>
-          <div className="team-blk">
-            <div className="tb-name">{match.away}</div>
-            <div className="sc-pick">
-              <button className={`sc-btn${ag===0?' dim':''}`} onClick={()=>setAg(Math.max(0,ag-1))}>−</button>
-              <div className="sc-val">{ag}</div>
-              <button className="sc-btn" onClick={()=>setAg(ag+1)}>+</button>
-            </div>
-          </div>
-        </div>
-        <div className="cards-blk">
-          <div className="cb-hdr" style={{color:'#ca8a04'}}>
-            <span className="cb-icon" style={{background:'#fde047',border:'1px solid #ca8a04',borderRadius:'2px'}}/> Yellow Cards
-          </div>
-          <div className="cb-row">
-            <CBtn value={hy} onChange={setHy} label={match.home} color="#ca8a04"/>
-            <CBtn value={ay} onChange={setAy} label={match.away} color="#ca8a04"/>
-          </div>
-        </div>
-        <div className="cards-blk">
-          <div className="cb-hdr" style={{color:'#dc2626'}}>
-            <span className="cb-icon" style={{background:'#f87171',border:'1px solid #dc2626',borderRadius:'2px'}}/> Red Cards
-          </div>
-          <div className="cb-row">
-            <CBtn value={hr} onChange={setHr} label={match.home} color="#dc2626"/>
-            <CBtn value={ar} onChange={setAr} label={match.away} color="#dc2626"/>
-          </div>
-        </div>
-        <button className="btn-save" onClick={save}>✓ Save Score</button>
-        {score?.played && <button className="btn-clear" onClick={clear}>✕ Clear Result</button>}
-      </div>
-    </div>
-  );
-}
 
 function SettingsPanel({apiKey, onSave, onClose}) {
   const [val, setVal] = useState(apiKey||'');
@@ -984,7 +810,6 @@ function App() {
   const [lastSync, setLastSync]       = useState(null);
   const [autoSync, setAutoSync]       = useState(false);
 
-  const handleScore = (id, sc) => setScores(p=>({...p,[id]:sc}));
   const handleApiSave = key => { setApiKey(key); if(key) setShowSettings(false); };
 
   const doSync = useCallback(async () => {
@@ -1114,7 +939,7 @@ function App() {
         </div>
 
         {activeNav==='Standings' && <StandingsView gk={activeGroup} scores={scores}/>}
-        {activeNav==='Schedule'  && <ScheduleView  gk={activeGroup} scores={scores} onScoreChange={handleScore}/>}
+        {activeNav==='Schedule'  && <ScheduleView  gk={activeGroup} scores={scores}/>}
         {activeNav==='Fair Play' && <CardsView     gk={activeGroup} scores={scores}/>}
       </div>
 
