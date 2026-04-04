@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ISCC 2026 | Central Scoring</title>
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #eef0f5;
+      min-height: 100vh;
+      color: #222;
+    }
+
+    /* ─── Header ────────────────────────────────────────── */
+    .header {
+      background: linear-gradient(135deg, #4b1fa7 0%, #00aeef 100%);
+      padding: 22px 16px 0;
+      color: #fff;
+      user-select: none;
+    }
+    .header-logo-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-icon {
+      width: 42px; height: 42px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .header-titles { flex: 1; }
+    .header-title {
+      font-size: 26px; font-weight: 900;
+      letter-spacing: -0.5px; line-height: 1.1;
+    }
+    .header-subtitle {
+      font-size: 12px; opacity: 0.78; margin-top: 2px;
+      letter-spacing: 0.3px;
+    }
+    .season-pill {
+      background: rgba(255,255,255,0.18);
+      border: 1.5px solid rgba(255,255,255,0.35);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 13px; font-weight: 700;
+      color: rgba(255,255,255,0.92);
+    }
+
+    /* Division tabs (in header) */
+    .div-tabs {
+      display: flex;
+      margin-top: 18px;
+      gap: 4px;
+    }
+    .div-tab {
+      padding: 12px 18px;
+      font-size: 14px; font-weight: 700;
+      color: rgba(255,255,255,0.65);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .div-tab.active {
+      color: #fff;
+      border-bottom-color: #fff;
+    }
+    .div-tab:hover:not(.active) { color: rgba(255,255,255,0.88); }
+
+    /* ─── Status Bar ─────────────────────────────────────── */
+    .status-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 9px 16px;
+      background: #fff;
+      border-bottom: 1px solid #e6e8ed;
+      font-size: 12px;
+    }
+    .live-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-weight: 700; color: #27ae60; font-size: 11px;
+    }
+    .live-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #27ae60;
+      animation: blink 1.6s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .refresh-btn {
+      background: none; border: 1px solid #d0d4de;
+      border-radius: 20px; padding: 4px 12px;
+      font-size: 12px; font-weight: 700; color: #4b1fa7;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .refresh-btn:hover { background: #f0e8ff; }
+    .offline-badge { color: #e74c3c; font-weight: 700; font-size: 11px; }
+
+    /* ─── Group Filter ───────────────────────────────────── */
+    .group-bar {
+      display: flex;
+      padding: 10px 12px;
+      gap: 8px;
+      overflow-x: auto;
+      background: #fff;
+      border-bottom: 1px solid #e6e8ed;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .group-bar::-webkit-scrollbar { display: none; }
+    .grp-btn {
+      padding: 6px 16px;
+      border: 1.5px solid #d0d4de;
+      border-radius: 20px;
+      font-size: 13px; font-weight: 700;
+      cursor: pointer; white-space: nowrap;
+      background: #fff; color: #555;
+      transition: all 0.15s;
+    }
+    .grp-btn.active {
+      background: #4b1fa7;
+      border-color: #4b1fa7;
+      color: #fff;
+    }
+    .grp-btn:hover:not(.active) { border-color: #4b1fa7; color: #4b1fa7; }
+
+    /* ─── Main Content Area ──────────────────────────────── */
+    .content { padding: 12px 10px 32px; }
+
+    /* ─── Group Section ──────────────────────────────────── */
+    .group-section { margin-bottom: 16px; }
+    .group-label {
+      padding: 8px 4px 6px;
+      font-size: 11px; font-weight: 800;
+      color: #4b1fa7; text-transform: uppercase;
+      letter-spacing: 1.2px;
+    }
+
+    /* ─── Table Card ─────────────────────────────────────── */
+    .table-card {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+    }
+
+    /* Table header row */
+    .t-head, .t-row {
+      display: grid;
+      grid-template-columns: 30px 1fr 36px 30px 30px 30px 38px 38px 42px 42px;
+      align-items: center;
+      padding: 0 12px;
+    }
+    .t-head {
+      height: 34px;
+      background: #f7f8fb;
+      border-bottom: 1px solid #ebebeb;
+      font-size: 10px; font-weight: 800;
+      color: #aaa; text-transform: uppercase; letter-spacing: 0.6px;
+    }
+    .t-head > div, .t-row > div { text-align: center; }
+    .t-head > div:nth-child(2), .t-row > div:nth-child(2) { text-align: left; }
+
+    /* Data rows */
+    .t-row {
+      height: 54px;
+      border-bottom: 1px solid #f2f2f2;
+      cursor: default;
+      transition: background 0.1s;
+    }
+    .t-row:last-child { border-bottom: none; }
+    .t-row:hover { background: #fafbff; }
+
+    /* Qualifying / Elimination zone stripe */
+    .zone-q { box-shadow: inset 3px 0 0 #27ae60; }
+    .zone-e { box-shadow: inset 3px 0 0 #e74c3c; }
+
+    /* Position number */
+    .pos-num {
+      font-size: 13px; font-weight: 800;
+      color: #333; text-align: center;
+    }
+
+    /* Team cell */
+    .team-cell {
+      display: flex; align-items: center; gap: 10px;
+      overflow: hidden;
+    }
+    .badge {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 900; color: #fff;
+      flex-shrink: 0; letter-spacing: 0;
+    }
+    .tname {
+      font-size: 13px; font-weight: 700; color: #1a1a2e;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Stats */
+    .stat { font-size: 13px; color: #555; text-align: center; }
+    .stat-pts { font-size: 15px; font-weight: 800; color: #111; text-align: center; }
+    .gd-pos { color: #27ae60; font-weight: 700; }
+    .gd-neg { color: #e74c3c; font-weight: 700; }
+    .gd-zero { color: #888; }
+
+    /* ─── Loading State ──────────────────────────────────── */
+    .loading-wrap {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 64px 20px; gap: 16px;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid #e0d8f5;
+      border-top-color: #4b1fa7;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 14px; color: #888; }
+
+    /* ─── Error State ────────────────────────────────────── */
+    .error-wrap {
+      background: #fff; border-radius: 12px;
+      padding: 32px 20px; text-align: center;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+    }
+    .error-icon { font-size: 36px; }
+    .error-title { font-size: 17px; font-weight: 800; color: #c0392b; margin-top: 10px; }
+    .error-msg { font-size: 13px; color: #777; margin-top: 8px; line-height: 1.5; }
+    .error-hint {
+      display: inline-block;
+      margin-top: 14px;
+      background: #fef3cd; border: 1px solid #f0d36a;
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 12px; color: #7a5f00; text-align: left;
+      line-height: 1.6;
+    }
+    .retry-btn {
+      display: inline-block; margin-top: 16px;
+      background: #4b1fa7; color: #fff;
+      border: none; border-radius: 8px;
+      padding: 10px 24px; font-size: 14px; font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* ─── Empty State ────────────────────────────────────── */
+    .empty-state {
+      padding: 48px 20px; text-align: center; color: #bbb;
+      font-size: 14px; font-weight: 600;
+    }
+
+    /* ─── Legend ─────────────────────────────────────────── */
+    .legend {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      padding: 12px 4px 4px;
+      font-size: 11px; color: #888;
+    }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+    /* ─── Footer ─────────────────────────────────────────── */
+    .footer {
+      text-align: center; padding: 16px;
+      font-size: 11px; color: #bbb;
+    }
+
+    /* ─── Responsive ─────────────────────────────────────── */
+    @media (max-width: 420px) {
+      .t-head, .t-row {
+        grid-template-columns: 26px 1fr 32px 26px 26px 26px 32px 32px 38px 38px;
+        padding: 0 8px;
+      }
+      .t-head { font-size: 9px; }
+      .tname { font-size: 12px; }
+      .stat { font-size: 12px; }
+      .stat-pts { font-size: 14px; }
+      .badge { width: 26px; height: 26px; font-size: 10px; }
+    }
+    @media (min-width: 768px) {
+      .t-head, .t-row {
+        grid-template-columns: 34px 1fr 44px 36px 36px 36px 44px 44px 48px 52px;
+      }
+      .content { max-width: 860px; margin: 0 auto; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <!-- Rendered by JavaScript -->
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   ISCC 2026 Central Scoring App
+   Google Sheets ID: 1guJ2zKMBAuMr7zwReJh1YHSxkk1BmBkx6zKpKo_zh6I
+
+   IMPORTANT: The Google Sheet must be shared as:
+   "Anyone with the link → Viewer"
+   (File → Share → Share with others → Change to "Anyone with the link")
+═══════════════════════════════════════════════════════════════ */
+
+const SHEET_ID      = '1guJ2zKMBAuMr7zwReJh1YHSxkk1BmBkx6zKpKo_zh6I';
+const REFRESH_SEC   = 60;
+
+/* ── Badge colours ──────────────────────────────────────────── */
+const PALETTE = [
+  '#e53935','#d81b60','#8e24aa','#5e35b1','#3949ab',
+  '#1e88e5','#039be5','#00acc1','#00897b','#43a047',
+  '#7cb342','#f4511e','#fb8c00','#ffb300','#6d4c41',
+];
+function badgeColour(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return PALETTE[h % PALETTE.length];
+}
+function initials(name) {
+  return name.trim().split(/\s+/).filter(Boolean).slice(0, 2)
+    .map(w => w[0].toUpperCase()).join('');
+}
+
+/* ── App state ──────────────────────────────────────────────── */
+let state = {
+  division: '16plus',  // '16plus' | '1315'
+  group:    'all',
+  data: { '16plus': [], '1315': [] },
+  loading:  true,
+  error:    null,
+  lastUpdated: null,
+  countdown: REFRESH_SEC,
+};
+let _timer = null;
+
+/* ── Google Sheets fetch (JSONP – works from local file://) ─── */
+function fetchSheet(sheetName) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'gvizCb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}`
+              + `/gviz/tq?tqx=out:json;responseHandler:${cbName}`
+              + `&sheet=${encodeURIComponent(sheetName)}&_=${Date.now()}`;
+
+    const script = document.createElement('script');
+
+    window[cbName] = function(data) {
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      if (data.status === 'error') {
+        const msg = data.errors && data.errors[0] ? data.errors[0].detailed_message : 'Unknown error';
+        reject(new Error('Sheet error: ' + msg));
+      } else {
+        resolve(data.table);
+      }
+    };
+
+    script.src = url;
+    script.onerror = function() {
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      reject(new Error('Failed to fetch – check your internet connection'));
+    };
+
+    document.head.appendChild(script);
+  });
+}
+
+/* ── Parse standings from a gviz table ─────────────────────── */
+function getV(row, col) {
+  if (!row || !row.c || col >= row.c.length) return null;
+  const cell = row.c[col];
+  if (!cell || cell.v === undefined) return null;
+  return cell.v;
+}
+
+function parseStandings(table) {
+  if (!table || !table.rows) return [];
+  const teamGroups = {};  // name → group letter
+  const teamsMap   = {};  // name → stats object
+
+  for (let i = 1; i < table.rows.length; i++) {
+    const row = table.rows[i];
+    const get = col => getV(row, col);
+
+    /* Left side: game-level rows – extract team→group mapping */
+    const leftTeam = get(1);
+    const grp      = get(2);
+    if (leftTeam && typeof leftTeam === 'string' && grp) {
+      const k = leftTeam.trim();
+      if (k && !teamGroups[k]) teamGroups[k] = String(grp).trim();
+    }
+
+    /* Right side: aggregated team stats (cols N onward = index 13+) */
+    const rawName = get(13);
+    if (rawName && typeof rawName === 'string') {
+      const name = rawName.trim();
+      if (name && !teamsMap[name]) {
+        teamsMap[name] = {
+          name,
+          wins:   toNum(get(15)),
+          draws:  toNum(get(16)),
+          losses: toNum(get(17)),
+          pts:    toNum(get(18)),
+          gf:     toNum(get(19)),
+          yc:     toNum(get(20)),
+          rc:     toNum(get(21)),
+          ga:     toNum(get(22)),
+          fp:     toNum(get(23)),
+          gd:     toNum(get(25)),
+        };
+      }
+    }
+  }
+
+  return Object.values(teamsMap).map(t => ({
+    ...t,
+    group: teamGroups[t.name] || null,
+    mp: t.wins + t.draws + t.losses,
+  }));
+}
+
+function toNum(v) { return (v === null || v === undefined || v === '') ? 0 : Number(v) || 0; }
+
+/* ── Sort standings (ISCC tiebreak rules) ───────────────────── */
+function sortTeams(teams) {
+  return [...teams].sort((a, b) => {
+    if (b.pts  !== a.pts)  return b.pts  - a.pts;   // 1. Points
+    if (b.gd   !== a.gd)   return b.gd   - a.gd;    // 2. GD
+    if (b.gf   !== a.gf)   return b.gf   - a.gf;    // 3. Goals scored
+    if (a.ga   !== b.ga)   return a.ga   - b.ga;    // 4. Fewest conceded
+    return (a.fp || 0) - (b.fp || 0);               // 5. Fair play (fewer = better)
+  });
+}
+
+function getGroups(teams) {
+  return [...new Set(
+    teams.map(t => t.group).filter(g => g && g.length > 0)
+  )].sort();
+}
+
+/* ── Load data from Google Sheets ───────────────────────────── */
+async function loadData() {
+  state.loading = true;
+  state.error   = null;
+  render();
+  try {
+    const [t16, t13] = await Promise.all([
+      fetchSheet('16+ Team Stats'),
+      fetchSheet('13-15 Team Stats'),
+    ]);
+    state.data['16plus'] = parseStandings(t16);
+    state.data['1315']   = parseStandings(t13);
+    state.lastUpdated    = new Date();
+    state.countdown      = REFRESH_SEC;
+  } catch (e) {
+    state.error = e.message;
+  }
+  state.loading = false;
+  render();
+}
+
+function manualRefresh() {
+  clearInterval(_timer);
+  state.countdown = REFRESH_SEC;
+  loadData().then(() => startTimer());
+}
+
+function startTimer() {
+  state.countdown = REFRESH_SEC;
+  _timer = setInterval(() => {
+    state.countdown--;
+    if (state.countdown <= 0) {
+      clearInterval(_timer);
+      loadData().then(() => startTimer());
+    } else {
+      // Only update the countdown display without a full re-render
+      const btn = document.querySelector('.refresh-btn');
+      if (btn) btn.textContent = `↻ ${state.countdown}s`;
+    }
+  }, 1000);
+}
+
+/* ── Rendering helpers ──────────────────────────────────────── */
+function gdHTML(gd) {
+  if (gd > 0) return `<span class="gd-pos">+${gd}</span>`;
+  if (gd < 0) return `<span class="gd-neg">${gd}</span>`;
+  return `<span class="gd-zero">0</span>`;
+}
+
+function teamRowHTML(team, pos, totalInGroup) {
+  const zoneClass = pos <= Math.min(2, Math.ceil(totalInGroup / 2)) ? 'zone-q' : '';
+  const colour    = badgeColour(team.name);
+  const ini       = initials(team.name);
+  return `
+    <div class="t-row ${zoneClass}">
+      <div class="pos-num">${pos}</div>
+      <div class="team-cell">
+        <div class="badge" style="background:${colour}">${ini}</div>
+        <div class="tname" title="${team.name}">${team.name}</div>
+      </div>
+      <div class="stat">${team.mp}</div>
+      <div class="stat">${team.wins}</div>
+      <div class="stat">${team.draws}</div>
+      <div class="stat">${team.losses}</div>
+      <div class="stat">${team.gf}</div>
+      <div class="stat">${team.ga}</div>
+      <div class="stat">${gdHTML(team.gd)}</div>
+      <div class="stat-pts">${team.pts}</div>
+    </div>`;
+}
+
+const TABLE_HEADER = `
+  <div class="t-head">
+    <div></div>
+    <div style="text-align:left">Team</div>
+    <div>MP</div><div>W</div><div>D</div><div>L</div>
+    <div>GF</div><div>GA</div><div>GD</div><div>Pts</div>
+  </div>`;
+
+function renderStandingsSection(teams, groupFilter, is16) {
+  if (!teams.length) {
+    return `<div class="empty-state">⚽ No data yet — check back once matches begin!</div>`;
+  }
+
+  if (groupFilter === 'all' && is16) {
+    /* Show per-group tables */
+    const groups = getGroups(teams);
+    if (!groups.length) {
+      /* Fallback: no group info yet, show one flat table */
+      const sorted = sortTeams(teams);
+      return `
+        <div class="group-section">
+          <div class="table-card">
+            ${TABLE_HEADER}
+            ${sorted.map((t, i) => teamRowHTML(t, i + 1, sorted.length)).join('')}
+          </div>
+        </div>`;
+    }
+    return groups.map(g => {
+      const gt = sortTeams(teams.filter(t => t.group === g));
+      return `
+        <div class="group-section">
+          <div class="group-label">Group ${g}</div>
+          <div class="table-card">
+            ${TABLE_HEADER}
+            ${gt.map((t, i) => teamRowHTML(t, i + 1, gt.length)).join('')}
+          </div>
+        </div>`;
+    }).join('');
+
+  } else {
+    /* Single table for selected group or 13-15 */
+    const filtered = groupFilter !== 'all'
+      ? teams.filter(t => t.group === groupFilter)
+      : teams;
+    const sorted = sortTeams(filtered);
+    const label  = groupFilter !== 'all' ? `<div class="group-label">Group ${groupFilter}</div>` : '';
+    return `
+      <div class="group-section">
+        ${label}
+        <div class="table-card">
+          ${TABLE_HEADER}
+          ${sorted.map((t, i) => teamRowHTML(t, i + 1, sorted.length)).join('')}
+        </div>
+      </div>`;
+  }
+}
+
+/* ── Main render ────────────────────────────────────────────── */
+function render() {
+  const { division, group, data, loading, error, lastUpdated, countdown } = state;
+  const teams  = data[division];
+  const is16   = division === '16plus';
+  const groups = is16 ? getGroups(teams) : [];
+
+  /* Status bar text */
+  const updStr = lastUpdated
+    ? lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    : '–';
+  const statusHTML = lastUpdated
+    ? `<div class="live-badge"><div class="live-dot"></div>LIVE &nbsp;·&nbsp; ${updStr}</div>`
+    : `<div class="offline-badge">⚠ Not connected</div>`;
+
+  /* Group filter buttons */
+  const groupBarHTML = is16 && groups.length ? `
+    <div class="group-bar">
+      <button class="grp-btn ${group === 'all' ? 'active' : ''}" onclick="setGroup('all')">All Groups</button>
+      ${groups.map(g => `
+        <button class="grp-btn ${group === g ? 'active' : ''}" onclick="setGroup('${g}')">Group ${g}</button>
+      `).join('')}
+    </div>` : '';
+
+  /* Legend */
+  const legendHTML = `
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#27ae60"></div>
+        Advancing to knockouts
+      </div>
+    </div>`;
+
+  /* Main content */
+  let contentHTML;
+  if (loading) {
+    contentHTML = `
+      <div class="loading-wrap">
+        <div class="spinner"></div>
+        <div class="loading-text">Loading live scores…</div>
+      </div>`;
+  } else if (error) {
+    contentHTML = `
+      <div class="error-wrap">
+        <div class="error-icon">⚠️</div>
+        <div class="error-title">Could not load data</div>
+        <div class="error-msg">${error}</div>
+        <div class="error-hint">
+          <strong>Fix:</strong> Make sure the Google Sheet is shared as<br>
+          <strong>"Anyone with the link → Viewer"</strong><br>
+          (File → Share → Share with others → change access)
+        </div>
+        <br>
+        <button class="retry-btn" onclick="manualRefresh()">Retry</button>
+      </div>`;
+  } else {
+    contentHTML = renderStandingsSection(teams, is16 ? group : 'all', is16)
+                + legendHTML;
+  }
+
+  document.getElementById('app').innerHTML = `
+    <!-- ── Header ── -->
+    <div class="header">
+      <div class="header-logo-row">
+        <div class="header-icon">⚽</div>
+        <div class="header-titles">
+          <div class="header-title">ISCC 2026</div>
+          <div class="header-subtitle">Ismaili Soccer Champions Cup · Central Scoring</div>
+        </div>
+        <div class="season-pill">April 2026</div>
+      </div>
+
+      <div class="div-tabs">
+        <div class="div-tab ${division === '16plus' ? 'active' : ''}"
+             onclick="setDivision('16plus')">Men's 16+</div>
+        <div class="div-tab ${division === '1315'   ? 'active' : ''}"
+             onclick="setDivision('1315')">Boys 13–15</div>
+      </div>
+    </div>
+
+    <!-- ── Status Bar ── -->
+    <div class="status-bar">
+      ${statusHTML}
+      <button class="refresh-btn" onclick="manualRefresh()">↻ ${countdown}s</button>
+    </div>
+
+    <!-- ── Group Filter ── -->
+    ${groupBarHTML}
+
+    <!-- ── Content ── -->
+    <div class="content">
+      ${contentHTML}
+    </div>
+
+    <div class="footer">
+      Auto-refreshes every ${REFRESH_SEC}s &nbsp;·&nbsp; ISCC 2026 Houston
+    </div>
+  `;
+}
+
+/* ── State setters (called from onclick) ────────────────────── */
+function setDivision(d) {
+  state.division = d;
+  state.group    = 'all';
+  render();
+}
+function setGroup(g) {
+  state.group = g;
+  render();
+}
+
+/* ── Boot ───────────────────────────────────────────────────── */
+loadData().then(() => startTimer());
+</script>
+</body>
+</html>
