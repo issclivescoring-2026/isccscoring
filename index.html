@@ -550,7 +550,29 @@ const GROUPS = {
     ]
   },
 };
-const GK = ['13-15','A','B','C','D','E'];
+
+// ─── 16+ All: virtual group aggregating all five 16+ groups ──────────────────
+GROUPS['16+'] = {
+  label: '16+ Division', tab: '16+ All',
+  location: 'KISC Fields + HSF Fields',
+  statsSheet: '16+ Team Stats',
+  teams: [
+    ...GROUPS['A'].teams,
+    ...GROUPS['B'].teams,
+    ...GROUPS['C'].teams,
+    ...GROUPS['D'].teams,
+    ...GROUPS['E'].teams,
+  ],
+  matches: [
+    ...GROUPS['A'].matches,
+    ...GROUPS['B'].matches,
+    ...GROUPS['C'].matches,
+    ...GROUPS['D'].matches,
+    ...GROUPS['E'].matches,
+  ],
+};
+
+const GK = ['13-15','A','B','C','D','E','16+'];
 const CAP = 6;
 const DOT_COLORS = ['#7b2fbe','#c8102e','#0ea5e9','#16a34a','#f59e0b','#0891b2','#9333ea','#dc2626','#15803d','#2563eb'];
 const dotColor = (t, ts) => DOT_COLORS[ts.indexOf(t) % DOT_COLORS.length];
@@ -696,7 +718,7 @@ function StandingsView({gk, scores}) {
       </div>
       <div className="st-card">
         <div className="st-card-hdr">
-          🏆 Group Standings
+          {gk==='16+' ? '🏆 16+ Division — All Teams' : gk==='13-15' ? '🏆 13–15 Division — All Teams' : '🏆 Group Standings'}
           {hasLive && <span className="from-sheets-tag">⚡ Live</span>}
         </div>
         <table className="st">
@@ -995,7 +1017,8 @@ function App() {
   }, [autoSync, apiKey, doSync]);
 
   const totalPlayed = Object.values(scores).filter(s=>s?.played).length;
-  const totalMatches = GK.reduce((a,k)=>a+GROUPS[k].matches.length, 0);
+  // Exclude the virtual '16+' group to avoid double-counting A-E matches
+  const totalMatches = GK.filter(k=>k!=='16+').reduce((a,k)=>a+GROUPS[k].matches.length, 0);
   const standings = useMemo(()=>computeStandings(activeGroup,scores),[activeGroup,scores]);
   const grp = GROUPS[activeGroup];
   const gPlayed = grp.matches.filter(m=>scores[m.id]?.played).length;
@@ -1096,7 +1119,7 @@ function App() {
       </div>
 
       <div className="footer">
-        ISCC 2026 · 6 divisions · 28 teams · 56 matches<br/>
+        ISCC 2026 · 2 divisions · 28 teams · 56 matches<br/>
         Win = 3 pts · Draw = 1 pt · GD capped ±6/match
       </div>
 
