@@ -1,688 +1,1110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ISCC 2026 | Central Scoring</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ISCC 2026 — Live Scoring</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
   <style>
-    /* ─── Reset & Base ─────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { font-size: 16px; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: #eef0f5;
+      background: #f0f0f5;
+      color: #1a1a2e;
       min-height: 100vh;
-      color: #222;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ─── Header ────────────────────────────────────────── */
-    .header {
-      background: linear-gradient(135deg, #4b1fa7 0%, #00aeef 100%);
-      padding: 22px 16px 0;
-      color: #fff;
-      user-select: none;
+    /* ── EPL-style Hero ── */
+    .hero {
+      background: linear-gradient(135deg, #5b1fa8 0%, #7b2fbe 30%, #0ea5c9 75%, #06d6c7 100%);
+      padding: 20px 18px 26px;
+      color: white;
+      position: relative;
+      overflow: hidden;
     }
-    .header-logo-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .header-icon {
-      width: 42px; height: 42px;
-      background: rgba(255,255,255,0.18);
+    .hero::after {
+      content: '';
+      position: absolute;
+      right: -40px; bottom: -40px;
+      width: 220px; height: 220px;
       border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
+      background: rgba(255,255,255,0.06);
+      pointer-events: none;
     }
-    .header-titles { flex: 1; }
-    .header-title {
-      font-size: 26px; font-weight: 900;
-      letter-spacing: -0.5px; line-height: 1.1;
+    .hero::before {
+      content: '';
+      position: absolute;
+      right: 40px; bottom: 10px;
+      width: 130px; height: 130px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+      pointer-events: none;
     }
-    .header-subtitle {
-      font-size: 12px; opacity: 0.78; margin-top: 2px;
-      letter-spacing: 0.3px;
-    }
-    .season-pill {
-      background: rgba(255,255,255,0.18);
-      border: 1.5px solid rgba(255,255,255,0.35);
+    .hero-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+    .hero-label { font-size: 0.62rem; letter-spacing: 0.13em; text-transform: uppercase; opacity: 0.75; margin-bottom: 3px; }
+    .hero-title { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+    .hero-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .hero-badge {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.35);
+      padding: 5px 12px;
       border-radius: 20px;
-      padding: 5px 14px;
-      font-size: 13px; font-weight: 700;
-      color: rgba(255,255,255,0.92);
-    }
-
-    /* Division tabs (in header) */
-    .div-tabs {
-      display: flex;
-      margin-top: 18px;
-      gap: 4px;
-    }
-    .div-tab {
-      padding: 12px 18px;
-      font-size: 14px; font-weight: 700;
-      color: rgba(255,255,255,0.65);
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      transition: color 0.15s, border-color 0.15s;
-      white-space: nowrap;
-    }
-    .div-tab.active {
-      color: #fff;
-      border-bottom-color: #fff;
-    }
-    .div-tab:hover:not(.active) { color: rgba(255,255,255,0.88); }
-
-    /* ─── Status Bar ─────────────────────────────────────── */
-    .status-bar {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 9px 16px;
-      background: #fff;
-      border-bottom: 1px solid #e6e8ed;
-      font-size: 12px;
-    }
-    .live-badge {
-      display: flex; align-items: center; gap: 6px;
-      font-weight: 700; color: #27ae60; font-size: 11px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      backdrop-filter: blur(4px);
     }
     .live-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: #27ae60;
-      animation: blink 1.6s ease-in-out infinite;
+      display: flex; align-items: center; gap: 5px;
+      font-size: 0.6rem; font-weight: 700;
+      color: rgba(255,255,255,0.85);
     }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.35} }
-    .refresh-btn {
-      background: none; border: 1px solid #d0d4de;
-      border-radius: 20px; padding: 4px 12px;
-      font-size: 12px; font-weight: 700; color: #4b1fa7;
-      cursor: pointer; transition: background 0.15s;
+    .live-dot span {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #4ade80;
     }
-    .refresh-btn:hover { background: #f0e8ff; }
-    .offline-badge { color: #e74c3c; font-weight: 700; font-size: 11px; }
+    .live-dot span.off { background: rgba(255,255,255,0.35); }
+    .pulse { animation: pulse 1.4s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    .hero-season {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.76rem; font-weight: 600;
+      backdrop-filter: blur(4px);
+    }
 
-    /* ─── Group Filter ───────────────────────────────────── */
+    /* ── Sticky Nav Shell ── */
+    .tab-shell {
+      position: sticky; top: 0; z-index: 40;
+      background: white;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.08);
+    }
     .group-bar {
-      display: flex;
-      padding: 10px 12px;
-      gap: 8px;
-      overflow-x: auto;
-      background: #fff;
-      border-bottom: 1px solid #e6e8ed;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
+      display: flex; gap: 6px;
+      padding: 10px 14px;
+      overflow-x: auto; scrollbar-width: none;
+      border-bottom: 1px solid #f0f0f5;
     }
     .group-bar::-webkit-scrollbar { display: none; }
-    .grp-btn {
-      padding: 6px 16px;
-      border: 1.5px solid #d0d4de;
-      border-radius: 20px;
-      font-size: 13px; font-weight: 700;
-      cursor: pointer; white-space: nowrap;
-      background: #fff; color: #555;
+    .gpill {
+      flex-shrink: 0; padding: 5px 13px;
+      border-radius: 20px; font-size: 0.72rem; font-weight: 700;
+      cursor: pointer; border: 1.5px solid #e0e0ea;
+      background: white; color: #666;
+      transition: all 0.15s; user-select: none;
+    }
+    .gpill:hover { border-color: #7b2fbe; color: #7b2fbe; }
+    .gpill.active { background: #1a1a2e; border-color: #1a1a2e; color: white; }
+    .nav-tabs { display: flex; border-bottom: 1px solid #f0f0f5; padding: 0 6px; }
+    .nav-tab {
+      flex: 1; text-align: center;
+      padding: 12px 4px 10px;
+      font-size: 0.78rem; font-weight: 600; color: #aaa;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -1px; transition: color 0.15s; user-select: none;
+    }
+    .nav-tab.active { color: #1a1a2e; border-bottom-color: #c8102e; font-weight: 700; }
+
+    /* ── Sync Bar ── */
+    .sync-bar {
+      background: white;
+      border-bottom: 1px solid #f0f0f5;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .sync-info { font-size: 0.66rem; color: #aaa; }
+    .sync-info strong { color: #555; }
+    .sync-btn {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 14px;
+      background: linear-gradient(135deg, #5b1fa8, #7b2fbe);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      font-size: 0.7rem; font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+    .sync-btn:hover { opacity: 0.88; }
+    .sync-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .sync-btn .spin { display: inline-block; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .sync-error { font-size: 0.64rem; color: #dc2626; }
+    .sync-ok { font-size: 0.64rem; color: #16a34a; }
+
+    /* ── Content ── */
+    .content { padding: 12px; max-width: 640px; margin: 0 auto; }
+
+    /* ── Stats Strip ── */
+    .strip { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .strip-card {
+      background: white; border-radius: 12px; padding: 11px 8px;
+      text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .strip-val { font-size: 1.25rem; font-weight: 900; color: #1a1a2e; line-height: 1; }
+    .strip-lbl { font-size: 0.54rem; text-transform: uppercase; letter-spacing: 0.1em; color: #bbb; font-weight: 700; margin-top: 4px; }
+
+    /* ── Tiebreaker note ── */
+    .tb-note {
+      background: #fdf4ff; border-left: 3px solid #7b2fbe;
+      padding: 8px 12px; border-radius: 0 8px 8px 0;
+      font-size: 0.67rem; color: #5b1fa8;
+      margin-bottom: 12px; line-height: 1.5;
+    }
+
+    /* ── Standings Table ── */
+    .st-card {
+      background: white; border-radius: 14px; overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 12px;
+    }
+    .st-card-hdr {
+      padding: 11px 16px 9px; border-bottom: 1px solid #f0f0f5;
+      font-size: 0.7rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.1em; color: #1a1a2e;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .from-sheets-tag {
+      background: #dcfce7; color: #16a34a;
+      font-size: 0.58rem; font-weight: 700;
+      padding: 2px 8px; border-radius: 8px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    table.st { width: 100%; border-collapse: collapse; }
+    table.st th {
+      padding: 6px 7px;
+      font-size: 0.58rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em; color: #bbb;
+      text-align: right; background: #fafafa;
+      border-bottom: 1px solid #f0f0f5;
+    }
+    table.st th:first-child { width: 30px; text-align: center; padding-left: 10px; }
+    table.st th:nth-child(2) { text-align: left; padding-left: 4px; min-width: 90px; }
+    table.st td {
+      padding: 9px 7px; font-size: 0.79rem;
+      text-align: right; border-bottom: 1px solid #f5f5f8;
+    }
+    table.st td:first-child { text-align: center; padding-left: 10px; width: 30px; }
+    table.st td:nth-child(2) { text-align: left; padding-left: 4px; }
+    table.st tr:last-child td { border-bottom: none; }
+    table.st tr:hover td { background: #fafafe; }
+    .pos-num { font-size: 0.75rem; font-weight: 700; color: #ccc; }
+    .pos-1 { color: #f0c040; font-weight: 900; }
+    .pos-2 { color: #94a3b8; font-weight: 900; }
+    .pos-3 { color: #c2855a; font-weight: 900; }
+    .team-cell { display: flex; align-items: center; gap: 7px; }
+    .team-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .team-txt { font-weight: 600; font-size: 0.8rem; }
+    .pts-b { font-weight: 900; font-size: 0.86rem; color: #1a1a2e; }
+    .gd-p { color: #16a34a; font-weight: 700; }
+    .gd-n { color: #dc2626; font-weight: 700; }
+    .gd-z { color: #ccc; }
+    .form-dots { display: flex; gap: 3px; align-items: center; justify-content: flex-end; }
+    .fd { width: 6px; height: 6px; border-radius: 50%; }
+    .fd-w { background: #16a34a; }
+    .fd-d { background: #f59e0b; }
+    .fd-l { background: #dc2626; }
+
+    /* ── Match Cards ── */
+    .match-card {
+      background: white; border-radius: 14px; overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 8px;
+      cursor: pointer; transition: transform 0.12s, box-shadow 0.12s;
+      user-select: none;
+    }
+    .match-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .match-card:active { transform: scale(0.985); }
+    .mc-top {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 12px; background: #fafafa; border-bottom: 1px solid #f0f0f5;
+    }
+    .mc-time { font-size: 0.65rem; font-weight: 700; color: #888; }
+    .mc-status-row { display: flex; align-items: center; gap: 6px; }
+    .mc-status {
+      font-size: 0.57rem; font-weight: 800; padding: 2px 9px;
+      border-radius: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .st-final { background: #1a1a2e; color: white; }
+    .st-upcoming { background: #f0f0f5; color: #aaa; }
+    .sheets-tag { font-size: 0.55rem; color: #16a34a; font-weight: 700; }
+    .mc-body {
+      padding: 11px 14px; display: flex; align-items: center; gap: 8px;
+    }
+    .mc-team {
+      flex: 1; font-size: 0.86rem; font-weight: 700; line-height: 1.2; color: #1a1a2e;
+    }
+    .mc-team.right { text-align: right; }
+    .mc-team.left  { text-align: left; }
+    .mc-team.win  { color: #16a34a; }
+    .mc-team.loss { color: #dc2626; opacity: 0.7; }
+    .mc-score-wrap { text-align: center; min-width: 64px; flex-shrink: 0; }
+    .mc-score { font-size: 1.6rem; font-weight: 900; color: #1a1a2e; letter-spacing: -0.02em; line-height: 1; }
+    .mc-dash { color: #ddd; font-weight: 300; margin: 0 2px; }
+    .mc-vs { font-size: 0.7rem; font-weight: 800; color: #ddd; }
+    .mc-pips { display: flex; justify-content: center; gap: 2px; margin-top: 4px; flex-wrap: wrap; }
+    .pip { width: 8px; height: 11px; border-radius: 1.5px; }
+    .pip-y { background: #fde047; border: 1px solid #ca8a04; }
+    .pip-r { background: #f87171; border: 1px solid #dc2626; }
+    .mc-hint { text-align: center; font-size: 0.57rem; color: #ddd; padding-bottom: 7px; letter-spacing: 0.04em; }
+
+    /* ── Cards / Fair Play ── */
+    .fp-card {
+      background: white; border-radius: 14px; overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 8px;
+    }
+    .fp-hdr {
+      padding: 10px 14px; background: #fafafa;
+      border-bottom: 1px solid #f0f0f5;
+      font-size: 0.66rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.1em; color: #888;
+    }
+    .fp-row {
+      display: flex; align-items: center;
+      padding: 10px 14px; border-bottom: 1px solid #f5f5f8;
+      gap: 10px;
+    }
+    .fp-row:last-child { border-bottom: none; }
+    .fp-rank { font-size: 0.7rem; font-weight: 800; color: #ccc; width: 20px; flex-shrink: 0; }
+    .fp-name { flex: 1; font-size: 0.82rem; font-weight: 600; }
+    .fp-cards { display: flex; gap: 12px; align-items: center; }
+    .fp-pill { display: flex; align-items: center; gap: 4px; font-size: 0.76rem; font-weight: 700; }
+    .fc-icon { width: 10px; height: 14px; border-radius: 2px; display: inline-block; }
+    .fc-y { background: #fde047; border: 1px solid #ca8a04; }
+    .fc-r { background: #f87171; border: 1px solid #dc2626; }
+    .fp-pts { font-size: 0.68rem; color: #aaa; font-weight: 700; }
+
+    /* ── Settings Panel ── */
+    .settings-overlay {
+      position: fixed; inset: 0;
+      background: rgba(10,10,30,0.55);
+      z-index: 300;
+      display: flex; align-items: flex-end; justify-content: center;
+      backdrop-filter: blur(3px);
+    }
+    .settings-sheet {
+      background: white; border-radius: 22px 22px 0 0;
+      width: 100%; max-width: 520px;
+      padding: 8px 18px 36px; max-height: 90vh; overflow-y: auto;
+    }
+    .settings-handle { width: 36px; height: 4px; background: #e5e7eb; border-radius: 2px; margin: 10px auto 16px; }
+    .settings-title { font-size: 1.05rem; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; }
+    .settings-sub { font-size: 0.72rem; color: #888; margin-bottom: 18px; line-height: 1.5; }
+    .settings-step {
+      background: #fdf4ff; border-radius: 12px; padding: 14px;
+      margin-bottom: 14px;
+    }
+    .step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #7b2fbe; color: white;
+      font-size: 0.7rem; font-weight: 800;
+      margin-right: 8px; flex-shrink: 0;
+    }
+    .step-hdr { display: flex; align-items: center; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; }
+    .step-body { font-size: 0.71rem; color: #555; line-height: 1.6; padding-left: 30px; }
+    .step-body a { color: #7b2fbe; font-weight: 600; text-decoration: none; }
+    .step-body code {
+      background: #f0e8ff; padding: 1px 5px; border-radius: 4px;
+      font-family: monospace; font-size: 0.88em;
+    }
+    .api-input-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .api-input {
+      flex: 1; padding: 10px 12px;
+      border: 1.5px solid #e0e0ea; border-radius: 10px;
+      font-size: 0.82rem; outline: none;
+      font-family: monospace;
+      transition: border-color 0.15s;
+    }
+    .api-input:focus { border-color: #7b2fbe; }
+    .api-input::placeholder { font-family: sans-serif; color: #ccc; }
+    .btn-primary {
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #5b1fa8, #7b2fbe);
+      color: white; border: none; border-radius: 10px;
+      font-size: 0.82rem; font-weight: 700; cursor: pointer;
+      white-space: nowrap; transition: opacity 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-outline {
+      width: 100%; padding: 11px;
+      background: white; color: #7b2fbe;
+      border: 1.5px solid #7b2fbe; border-radius: 10px;
+      font-size: 0.85rem; font-weight: 700; cursor: pointer;
       transition: all 0.15s;
     }
-    .grp-btn.active {
-      background: #4b1fa7;
-      border-color: #4b1fa7;
-      color: #fff;
-    }
-    .grp-btn:hover:not(.active) { border-color: #4b1fa7; color: #4b1fa7; }
+    .btn-outline:hover { background: #fdf4ff; }
+    .api-note { font-size: 0.65rem; color: #aaa; line-height: 1.4; margin-bottom: 14px; }
 
-    /* ─── Main Content Area ──────────────────────────────── */
-    .content { padding: 12px 10px 32px; }
-
-    /* ─── Group Section ──────────────────────────────────── */
-    .group-section { margin-bottom: 16px; }
-    .group-label {
-      padding: 8px 4px 6px;
-      font-size: 11px; font-weight: 800;
-      color: #4b1fa7; text-transform: uppercase;
-      letter-spacing: 1.2px;
+    /* ── Score Modal ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(10,10,30,0.55);
+      z-index: 200;
+      display: flex; align-items: flex-end; justify-content: center;
+      backdrop-filter: blur(3px);
     }
-
-    /* ─── Table Card ─────────────────────────────────────── */
-    .table-card {
-      background: #fff;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+    .sheet {
+      background: white; border-radius: 22px 22px 0 0;
+      width: 100%; max-width: 520px;
+      padding: 8px 18px 36px; max-height: 94vh; overflow-y: auto;
     }
-
-    /* Table header row */
-    .t-head, .t-row {
-      display: grid;
-      grid-template-columns: 30px 1fr 36px 30px 30px 30px 38px 38px 42px 42px;
-      align-items: center;
-      padding: 0 12px;
-    }
-    .t-head {
-      height: 34px;
-      background: #f7f8fb;
-      border-bottom: 1px solid #ebebeb;
-      font-size: 10px; font-weight: 800;
-      color: #aaa; text-transform: uppercase; letter-spacing: 0.6px;
-    }
-    .t-head > div, .t-row > div { text-align: center; }
-    .t-head > div:nth-child(2), .t-row > div:nth-child(2) { text-align: left; }
-
-    /* Data rows */
-    .t-row {
-      height: 54px;
-      border-bottom: 1px solid #f2f2f2;
-      cursor: default;
-      transition: background 0.1s;
-    }
-    .t-row:last-child { border-bottom: none; }
-    .t-row:hover { background: #fafbff; }
-
-    /* Qualifying / Elimination zone stripe */
-    .zone-q { box-shadow: inset 3px 0 0 #27ae60; }
-    .zone-e { box-shadow: inset 3px 0 0 #e74c3c; }
-
-    /* Position number */
-    .pos-num {
-      font-size: 13px; font-weight: 800;
-      color: #333; text-align: center;
-    }
-
-    /* Team cell */
-    .team-cell {
-      display: flex; align-items: center; gap: 10px;
-      overflow: hidden;
-    }
-    .badge {
+    .sheet-handle { width: 36px; height: 4px; background: #e5e7eb; border-radius: 2px; margin: 10px auto 16px; }
+    .sheet-hdr { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+    .sheet-title { font-size: 1rem; font-weight: 800; color: #1a1a2e; }
+    .sheet-time { font-size: 0.67rem; color: #aaa; margin-top: 2px; }
+    .close-btn {
       width: 30px; height: 30px; border-radius: 50%;
+      background: #f0f0f5; border: none; cursor: pointer;
+      font-size: 0.85rem; color: #888;
       display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 900; color: #fff;
-      flex-shrink: 0; letter-spacing: 0;
+      flex-shrink: 0;
     }
-    .tname {
-      font-size: 13px; font-weight: 700; color: #1a1a2e;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    .close-btn:hover { background: #e5e5ea; }
+    .result-pill {
+      text-align: center; font-size: 0.74rem; font-weight: 700;
+      padding: 8px; border-radius: 10px; margin: 12px 0;
     }
+    .rp-h { background: #dcfce7; color: #16a34a; }
+    .rp-a { background: #fee2e2; color: #dc2626; }
+    .rp-d { background: #fef9c3; color: #ca8a04; }
+    .score-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .team-blk { flex: 1; text-align: center; }
+    .tb-name {
+      font-size: 0.77rem; font-weight: 800; color: #334155; line-height: 1.25;
+      margin-bottom: 10px; min-height: 2.4em;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sc-pick { display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .sc-btn {
+      width: 42px; height: 42px; border-radius: 50%;
+      border: 2px solid #7b2fbe; background: white; color: #7b2fbe;
+      font-size: 1.4rem; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.12s;
+    }
+    .sc-btn:hover { background: #7b2fbe; color: white; }
+    .sc-btn:active { transform: scale(0.9); }
+    .sc-btn.dim { border-color: #e5e7eb; color: #ccc; }
+    .sc-btn.dim:hover { background: #f5f5f8; color: #aaa; }
+    .sc-val { font-size: 2.8rem; font-weight: 900; color: #1a1a2e; min-width: 44px; text-align: center; line-height: 1; }
+    .sc-sep { font-size: 1.6rem; font-weight: 300; color: #e5e7eb; }
+    .cards-blk { background: #fafafa; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+    .cb-hdr { font-size: 0.61rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+    .cb-icon { width: 11px; height: 16px; border-radius: 2px; }
+    .cb-row { display: flex; justify-content: space-around; }
+    .cb-team { text-align: center; }
+    .cbt-lbl { font-size: 0.65rem; color: #888; margin-bottom: 6px; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cbt-ctrl { display: flex; align-items: center; gap: 7px; justify-content: center; }
+    .cbt-btn {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1.5px solid #e5e7eb; background: white;
+      cursor: pointer; font-size: 0.85rem; font-weight: 700; color: #888;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cbt-btn:hover { border-color: #aaa; }
+    .cbt-val { font-size: 1.1rem; font-weight: 800; min-width: 22px; text-align: center; }
+    .btn-save {
+      width: 100%; padding: 15px;
+      background: linear-gradient(135deg, #5b1fa8, #7b2fbe);
+      color: white; border: none; border-radius: 12px;
+      font-size: 1rem; font-weight: 800; cursor: pointer;
+      letter-spacing: 0.02em; margin-bottom: 10px;
+      transition: opacity 0.15s;
+    }
+    .btn-save:hover { opacity: 0.93; }
+    .btn-save:active { transform: scale(0.98); }
+    .btn-clear {
+      width: 100%; padding: 11px;
+      background: white; color: #dc2626;
+      border: 1.5px solid #fca5a5;
+      border-radius: 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+    }
+    .btn-clear:hover { background: #fee2e2; }
 
-    /* Stats */
-    .stat { font-size: 13px; color: #555; text-align: center; }
-    .stat-pts { font-size: 15px; font-weight: 800; color: #111; text-align: center; }
-    .gd-pos { color: #27ae60; font-weight: 700; }
-    .gd-neg { color: #e74c3c; font-weight: 700; }
-    .gd-zero { color: #888; }
+    .footer { text-align: center; padding: 20px 16px 36px; font-size: 0.61rem; color: #ccc; }
 
-    /* ─── Loading State ──────────────────────────────────── */
-    .loading-wrap {
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 64px 20px; gap: 16px;
-    }
-    .spinner {
-      width: 40px; height: 40px;
-      border: 3px solid #e0d8f5;
-      border-top-color: #4b1fa7;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { font-size: 14px; color: #888; }
-
-    /* ─── Error State ────────────────────────────────────── */
-    .error-wrap {
-      background: #fff; border-radius: 12px;
-      padding: 32px 20px; text-align: center;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
-    }
-    .error-icon { font-size: 36px; }
-    .error-title { font-size: 17px; font-weight: 800; color: #c0392b; margin-top: 10px; }
-    .error-msg { font-size: 13px; color: #777; margin-top: 8px; line-height: 1.5; }
-    .error-hint {
-      display: inline-block;
-      margin-top: 14px;
-      background: #fef3cd; border: 1px solid #f0d36a;
-      border-radius: 8px; padding: 10px 14px;
-      font-size: 12px; color: #7a5f00; text-align: left;
-      line-height: 1.6;
-    }
-    .retry-btn {
-      display: inline-block; margin-top: 16px;
-      background: #4b1fa7; color: #fff;
-      border: none; border-radius: 8px;
-      padding: 10px 24px; font-size: 14px; font-weight: 700;
-      cursor: pointer;
-    }
-
-    /* ─── Empty State ────────────────────────────────────── */
-    .empty-state {
-      padding: 48px 20px; text-align: center; color: #bbb;
-      font-size: 14px; font-weight: 600;
-    }
-
-    /* ─── Legend ─────────────────────────────────────────── */
-    .legend {
-      display: flex; gap: 16px; flex-wrap: wrap;
-      padding: 12px 4px 4px;
-      font-size: 11px; color: #888;
-    }
-    .legend-item { display: flex; align-items: center; gap: 5px; }
-    .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
-
-    /* ─── Footer ─────────────────────────────────────────── */
-    .footer {
-      text-align: center; padding: 16px;
-      font-size: 11px; color: #bbb;
-    }
-
-    /* ─── Responsive ─────────────────────────────────────── */
-    @media (max-width: 420px) {
-      .t-head, .t-row {
-        grid-template-columns: 26px 1fr 32px 26px 26px 26px 32px 32px 38px 38px;
-        padding: 0 8px;
-      }
-      .t-head { font-size: 9px; }
-      .tname { font-size: 12px; }
-      .stat { font-size: 12px; }
-      .stat-pts { font-size: 14px; }
-      .badge { width: 26px; height: 26px; font-size: 10px; }
-    }
-    @media (min-width: 768px) {
-      .t-head, .t-row {
-        grid-template-columns: 34px 1fr 44px 36px 36px 36px 44px 44px 48px 52px;
-      }
-      .content { max-width: 860px; margin: 0 auto; }
+    @media (max-width: 380px) {
+      .mc-team { font-size: 0.76rem; }
+      .mc-score { font-size: 1.4rem; }
     }
   </style>
 </head>
 <body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useEffect, useCallback } = React;
 
-<div id="app">
-  <!-- Rendered by JavaScript -->
-</div>
+// ─── Sheet IDs ────────────────────────────────────────────────────────────────
+// The Tracking sheet is the source of truth (Dashboard IMPORTRANGEs from it)
+const TRACKING_SHEET_ID = '1guJ2zKMBAuMr7zwReJh1YHSxkk1BmBkx6zKpKo_zh6I';
 
-<script>
-/* ═══════════════════════════════════════════════════════════════
-   ISCC 2026 Central Scoring App
-   Google Sheets ID: 1guJ2zKMBAuMr7zwReJh1YHSxkk1BmBkx6zKpKo_zh6I
-
-   IMPORTANT: The Google Sheet must be shared as:
-   "Anyone with the link → Viewer"
-   (File → Share → Share with others → Change to "Anyone with the link")
-═══════════════════════════════════════════════════════════════ */
-
-const SHEET_ID      = '1guJ2zKMBAuMr7zwReJh1YHSxkk1BmBkx6zKpKo_zh6I';
-const REFRESH_SEC   = 60;
-
-/* ── Badge colours ──────────────────────────────────────────── */
-const PALETTE = [
-  '#e53935','#d81b60','#8e24aa','#5e35b1','#3949ab',
-  '#1e88e5','#039be5','#00acc1','#00897b','#43a047',
-  '#7cb342','#f4511e','#fb8c00','#ffb300','#6d4c41',
-];
-function badgeColour(name) {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-  return PALETTE[h % PALETTE.length];
-}
-function initials(name) {
-  return name.trim().split(/\s+/).filter(Boolean).slice(0, 2)
-    .map(w => w[0].toUpperCase()).join('');
-}
-
-/* ── App state ──────────────────────────────────────────────── */
-let state = {
-  division: '16plus',  // '16plus' | '1315'
-  group:    'all',
-  data: { '16plus': [], '1315': [] },
-  loading:  true,
-  error:    null,
-  lastUpdated: null,
-  countdown: REFRESH_SEC,
+// ─── Tournament Data ──────────────────────────────────────────────────────────
+const GROUPS = {
+  '13-15': {
+    label: "Men's 13–15", tab: '13–15',
+    location: 'HSF Fields 5A & 5B',
+    teams: ['Defenders FC','MKB A','MKB B','Midfielders FC','Wingers FC'],
+    statsSheet: '13-15 Team Stats',
+    matches: [
+      {id:'t01',time:'9:00–10:15',  home:'MKB A',         away:'Wingers FC'},
+      {id:'t02',time:'9:00–10:15',  home:'MKB B',         away:'Midfielders FC'},
+      {id:'t03',time:'10:15–11:30', home:'Defenders FC',  away:'Wingers FC'},
+      {id:'t04',time:'11:30–12:45', home:'MKB A',         away:'MKB B'},
+      {id:'t05',time:'11:30–12:45', home:'Midfielders FC',away:'Defenders FC'},
+      {id:'t06',time:'12:45–2:00',  home:'Wingers FC',    away:'Midfielders FC'},
+      {id:'t07',time:'2:00–3:15',   home:'Defenders FC',  away:'MKB A'},
+      {id:'t08',time:'2:00–3:15',   home:'Wingers FC',    away:'MKB B'},
+      {id:'t09',time:'3:15–4:05',   home:'Midfielders FC',away:'MKB A'},
+      {id:'t10',time:'3:15–4:05',   home:'MKB B',         away:'Defenders FC'},
+    ]
+  },
+  'A': {
+    label:'16+ Group A', tab:'Group A', location:'KISC Field #7',
+    teams:['ATL ACE','Atlanta FC','Ballers FC','Bayou Ballers'],
+    statsSheet:'16+ Team Stats',
+    matches:[
+      {id:'a1',time:'8:00–9:05',   home:'Bayou Ballers',away:'ATL ACE'},
+      {id:'a2',time:'9:05–10:10',  home:'Atlanta FC',   away:'Ballers FC'},
+      {id:'a3',time:'10:10–11:15', home:'ATL ACE',      away:'Bayou Ballers'},
+      {id:'a4',time:'11:15–12:20', home:'Ballers FC',   away:'Atlanta FC'},
+      {id:'a5',time:'1:25–2:30',   home:'Atlanta FC',   away:'Bayou Ballers'},
+      {id:'a6',time:'2:30–3:35',   home:'Ballers FC',   away:'ATL ACE'},
+      {id:'a7',time:'4:40–5:45',   home:'ATL ACE',      away:'Atlanta FC'},
+      {id:'a8',time:'7:00–7:55',   home:'Bayou Ballers',away:'Ballers FC'},
+    ]
+  },
+  'B': {
+    label:'16+ Group B', tab:'Group B', location:'KISC Field #8',
+    teams:['All-stars FC','Brooklyn 04','Chicago Strikers','Dallas Dingbats','Etihad FC'],
+    statsSheet:'16+ Team Stats',
+    matches:[
+      {id:'b01',time:'8:00–9:05',   home:'Brooklyn 04',     away:'Chicago Strikers'},
+      {id:'b02',time:'9:05–10:10',  home:'All-stars FC',    away:'Dallas Dingbats'},
+      {id:'b03',time:'10:10–11:15', home:'Etihad FC',       away:'Brooklyn 04'},
+      {id:'b04',time:'11:15–12:20', home:'Chicago Strikers',away:'All-stars FC'},
+      {id:'b05',time:'12:20–1:25',  home:'Dallas Dingbats', away:'Etihad FC'},
+      {id:'b06',time:'1:25–2:30',   home:'Brooklyn 04',     away:'All-stars FC'},
+      {id:'b07',time:'2:30–3:35',   home:'Chicago Strikers',away:'Dallas Dingbats'},
+      {id:'b08',time:'3:35–4:40',   home:'All-stars FC',    away:'Etihad FC'},
+      {id:'b09',time:'4:40–5:45',   home:'Dallas Dingbats', away:'Brooklyn 04'},
+      {id:'b10',time:'7:00–7:55',   home:'Etihad FC',       away:'Chicago Strikers'},
+    ]
+  },
+  'C': {
+    label:'16+ Group C', tab:'Group C', location:'KISC Field #9',
+    teams:['FC Memphis Howlers','Houston United FC','Mandem FC','Pamir NY','Strikers FC'],
+    statsSheet:'16+ Team Stats',
+    matches:[
+      {id:'c01',time:'8:00–9:05',   home:'FC Memphis Howlers',away:'Houston United FC'},
+      {id:'c02',time:'9:05–10:10',  home:'Pamir NY',          away:'Strikers FC'},
+      {id:'c03',time:'10:10–11:15', home:'FC Memphis Howlers',away:'Mandem FC'},
+      {id:'c04',time:'11:15–12:20', home:'Houston United FC', away:'Strikers FC'},
+      {id:'c05',time:'12:20–1:25',  home:'Mandem FC',         away:'Pamir NY'},
+      {id:'c06',time:'1:25–2:30',   home:'Strikers FC',       away:'FC Memphis Howlers'},
+      {id:'c07',time:'2:30–3:35',   home:'Mandem FC',         away:'Houston United FC'},
+      {id:'c08',time:'3:35–4:40',   home:'Pamir NY',          away:'FC Memphis Howlers'},
+      {id:'c09',time:'4:40–5:45',   home:'Strikers FC',       away:'Mandem FC'},
+      {id:'c10',time:'7:00–7:55',   home:'Houston United FC', away:'Pamir NY'},
+    ]
+  },
+  'D': {
+    label:'16+ Group D', tab:'Group D', location:'HSF Field 7A',
+    teams:['Florida United FC','Premier FC','Red Card Merchants FC','Richmond United','SEVEN XI'],
+    statsSheet:'16+ Team Stats',
+    matches:[
+      {id:'d01',time:'9:00–10:05',  home:'Richmond United',       away:'SEVEN XI'},
+      {id:'d02',time:'10:05–11:10', home:'Florida United FC',     away:'Red Card Merchants FC'},
+      {id:'d03',time:'11:10–12:15', home:'Premier FC',            away:'Richmond United'},
+      {id:'d04',time:'12:15–1:20',  home:'Red Card Merchants FC', away:'SEVEN XI'},
+      {id:'d05',time:'1:20–2:25',   home:'Florida United FC',     away:'Premier FC'},
+      {id:'d06',time:'2:25–3:30',   home:'Red Card Merchants FC', away:'Richmond United'},
+      {id:'d07',time:'3:30–4:35',   home:'SEVEN XI',              away:'Premier FC'},
+      {id:'d08',time:'4:35–5:40',   home:'Richmond United',       away:'Florida United FC'},
+      {id:'d09',time:'7:00–8:05',   home:'Premier FC',            away:'Red Card Merchants FC'},
+      {id:'d10',time:'8:05–9:00',   home:'SEVEN XI',              away:'Florida United FC'},
+    ]
+  },
+  'E': {
+    label:'16+ Group E', tab:'Group E', location:'HSF Field 7B',
+    teams:['Afg Kickers','Dribblers FC','Vintage 7','West Coast Best Coast'],
+    statsSheet:'16+ Team Stats',
+    matches:[
+      {id:'e1',time:'9:00–10:05',  home:'West Coast Best Coast',away:'Dribblers FC'},
+      {id:'e2',time:'10:05–11:10', home:'Vintage 7',            away:'Afg Kickers'},
+      {id:'e3',time:'11:10–12:15', home:'Dribblers FC',         away:'West Coast Best Coast'},
+      {id:'e4',time:'12:15–1:20',  home:'Afg Kickers',          away:'Vintage 7'},
+      {id:'e5',time:'2:25–3:30',   home:'West Coast Best Coast',away:'Vintage 7'},
+      {id:'e6',time:'3:30–4:35',   home:'Dribblers FC',         away:'Afg Kickers'},
+      {id:'e7',time:'7:00–8:05',   home:'Vintage 7',            away:'Dribblers FC'},
+      {id:'e8',time:'8:05–9:00',   home:'Afg Kickers',          away:'West Coast Best Coast'},
+    ]
+  },
 };
-let _timer = null;
+const GK = ['13-15','A','B','C','D','E'];
+const CAP = 6;
+const DOT_COLORS = ['#7b2fbe','#c8102e','#0ea5e9','#16a34a','#f59e0b','#0891b2','#9333ea','#dc2626','#15803d','#2563eb'];
+const dotColor = (t, ts) => DOT_COLORS[ts.indexOf(t) % DOT_COLORS.length];
 
-/* ── Google Sheets fetch (JSONP – works from local file://) ─── */
-function fetchSheet(sheetName) {
-  return new Promise((resolve, reject) => {
-    const cbName = 'gvizCb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}`
-              + `/gviz/tq?tqx=out:json;responseHandler:${cbName}`
-              + `&sheet=${encodeURIComponent(sheetName)}&_=${Date.now()}`;
-
-    const script = document.createElement('script');
-
-    window[cbName] = function(data) {
-      delete window[cbName];
-      if (script.parentNode) script.parentNode.removeChild(script);
-      if (data.status === 'error') {
-        const msg = data.errors && data.errors[0] ? data.errors[0].detailed_message : 'Unknown error';
-        reject(new Error('Sheet error: ' + msg));
-      } else {
-        resolve(data.table);
-      }
-    };
-
-    script.src = url;
-    script.onerror = function() {
-      delete window[cbName];
-      if (script.parentNode) script.parentNode.removeChild(script);
-      reject(new Error('Failed to fetch – check your internet connection'));
-    };
-
-    document.head.appendChild(script);
+// ─── Standings Calculation ────────────────────────────────────────────────────
+function computeStandings(gk, scores) {
+  const grp = GROUPS[gk];
+  const s = {};
+  grp.teams.forEach(t => { s[t] = {team:t,p:0,w:0,d:0,l:0,gf:0,ga:0,gdc:0,y:0,r:0,fp:0,pts:0,form:[]}; });
+  grp.matches.forEach(m => {
+    const sc = scores[m.id];
+    if (!sc?.played) return;
+    const hg=sc.homeGoals||0, ag=sc.awayGoals||0, gd=hg-ag;
+    const cgd = Math.max(-CAP,Math.min(CAP,gd));
+    const h=s[m.home], a=s[m.away];
+    if(!h||!a) return;
+    h.p++; a.p++;
+    h.gf+=hg; h.ga+=ag; h.gdc+=cgd;
+    a.gf+=ag; a.ga+=hg; a.gdc-=cgd;
+    h.y+=sc.homeYellow||0; h.r+=sc.homeRed||0;
+    a.y+=sc.awayYellow||0; a.r+=sc.awayRed||0;
+    h.fp-=(sc.homeYellow||0)+3*(sc.homeRed||0);
+    a.fp-=(sc.awayYellow||0)+3*(sc.awayRed||0);
+    if(hg>ag)      {h.w++;a.l++;h.pts+=3;h.form.push('W');a.form.push('L');}
+    else if(hg<ag) {a.w++;h.l++;a.pts+=3;h.form.push('L');a.form.push('W');}
+    else           {h.d++;a.d++;h.pts++;a.pts++;h.form.push('D');a.form.push('D');}
+  });
+  return Object.values(s).sort((a,b)=>{
+    if(b.pts!==a.pts) return b.pts-a.pts;
+    if(b.gdc!==a.gdc) return b.gdc-a.gdc;
+    if(b.gf!==a.gf) return b.gf-a.gf;
+    if(a.ga!==b.ga) return a.ga-b.ga;
+    if(b.fp!==a.fp) return b.fp-a.fp;
+    return a.team.localeCompare(b.team);
   });
 }
 
-/* ── Parse standings from a gviz table ─────────────────────── */
-function getV(row, col) {
-  if (!row || !row.c || col >= row.c.length) return null;
-  const cell = row.c[col];
-  if (!cell || cell.v === undefined) return null;
-  return cell.v;
-}
+// ─── Live Data Sync ───────────────────────────────────────────────────────────
+// Normalize time: "8:00-9:05" → "8:00–9:05" (hyphen → en-dash)
+const normTime = t => t ? t.toString().replace(/-/g,'–') : '';
 
-function parseStandings(table) {
-  if (!table || !table.rows) return [];
-  const teamGroups = {};  // name → group letter
-  const teamsMap   = {};  // name → stats object
+function parseStatsToScores(rows, allMatches) {
+  if (!rows || rows.length < 2) return {};
+  // Detect header row
+  const header = rows[0].map(h => (h||'').toString().toLowerCase().replace(/[\s?]/g,''));
+  const idx = k => header.indexOf(k);
+  const timeI   = idx('time');
+  const teamI   = idx('teamname');
+  const goalsI  = idx('goals');
+  const yellI   = idx('yellowcards');
+  const redI    = idx('redcard');
+  const concI   = idx('goalsconceded');
+  const scoredI = header.findIndex(h => h === 'scored');
 
-  for (let i = 1; i < table.rows.length; i++) {
-    const row = table.rows[i];
-    const get = col => getV(row, col);
-
-    /* Left side: game-level rows – extract team→group mapping */
-    const leftTeam = get(1);
-    const grp      = get(2);
-    if (leftTeam && typeof leftTeam === 'string' && grp) {
-      const k = leftTeam.trim();
-      if (k && !teamGroups[k]) teamGroups[k] = String(grp).trim();
-    }
-
-    /* Right side: aggregated team stats (cols N onward = index 13+) */
-    const rawName = get(13);
-    if (rawName && typeof rawName === 'string') {
-      const name = rawName.trim();
-      if (name && !teamsMap[name]) {
-        teamsMap[name] = {
-          name,
-          wins:   toNum(get(15)),
-          draws:  toNum(get(16)),
-          losses: toNum(get(17)),
-          pts:    toNum(get(18)),
-          gf:     toNum(get(19)),
-          yc:     toNum(get(20)),
-          rc:     toNum(get(21)),
-          ga:     toNum(get(22)),
-          fp:     toNum(get(23)),
-          gd:     toNum(get(25)),
-        };
-      }
-    }
+  // Build lookup: normalTime → teamName → {goals, yellow, red, conceded, scored}
+  const byTimeTeam = {};
+  for (const row of rows.slice(1)) {
+    const time = row[timeI]; const team = row[teamI];
+    if (!time || !team || typeof team !== 'string' || team.trim()==='') continue;
+    const nt = normTime(time);
+    if (!byTimeTeam[nt]) byTimeTeam[nt] = {};
+    const scored = row[scoredI];
+    byTimeTeam[nt][team.trim()] = {
+      goals:   parseFloat(row[goalsI])||0,
+      yellow:  parseFloat(row[yellI])||0,
+      red:     parseFloat(row[redI])||0,
+      conceded:parseFloat(row[concI])||0,
+      scored:  scored==='TRUE'||scored===true||scored==='True',
+    };
   }
 
-  return Object.values(teamsMap).map(t => ({
-    ...t,
-    group: teamGroups[t.name] || null,
-    mp: t.wins + t.draws + t.losses,
-  }));
-}
-
-function toNum(v) { return (v === null || v === undefined || v === '') ? 0 : Number(v) || 0; }
-
-/* ── Sort standings (ISCC tiebreak rules) ───────────────────── */
-function sortTeams(teams) {
-  return [...teams].sort((a, b) => {
-    if (b.pts  !== a.pts)  return b.pts  - a.pts;   // 1. Points
-    if (b.gd   !== a.gd)   return b.gd   - a.gd;    // 2. GD
-    if (b.gf   !== a.gf)   return b.gf   - a.gf;    // 3. Goals scored
-    if (a.ga   !== b.ga)   return a.ga   - b.ga;    // 4. Fewest conceded
-    return (a.fp || 0) - (b.fp || 0);               // 5. Fair play (fewer = better)
-  });
-}
-
-function getGroups(teams) {
-  return [...new Set(
-    teams.map(t => t.group).filter(g => g && g.length > 0)
-  )].sort();
-}
-
-/* ── Load data from Google Sheets ───────────────────────────── */
-async function loadData() {
-  state.loading = true;
-  state.error   = null;
-  render();
-  try {
-    const [t16, t13] = await Promise.all([
-      fetchSheet('16+ Team Stats'),
-      fetchSheet('13-15 Team Stats'),
-    ]);
-    state.data['16plus'] = parseStandings(t16);
-    state.data['1315']   = parseStandings(t13);
-    state.lastUpdated    = new Date();
-    state.countdown      = REFRESH_SEC;
-  } catch (e) {
-    state.error = e.message;
+  // Map to match IDs
+  const scores = {};
+  for (const match of allMatches) {
+    const teamsAt = byTimeTeam[match.time] || {};
+    const hd = teamsAt[match.home];
+    const ad = teamsAt[match.away];
+    if (!hd && !ad) continue;
+    if (!(hd?.scored || ad?.scored)) continue;
+    scores[match.id] = {
+      homeGoals:  hd?.goals   ?? ad?.conceded ?? 0,
+      awayGoals:  ad?.goals   ?? hd?.conceded ?? 0,
+      homeYellow: hd?.yellow  || 0,
+      awayYellow: ad?.yellow  || 0,
+      homeRed:    hd?.red     || 0,
+      awayRed:    ad?.red     || 0,
+      played: true,
+      fromSheets: true,
+    };
   }
-  state.loading = false;
-  render();
+  return scores;
 }
 
-function manualRefresh() {
-  clearInterval(_timer);
-  state.countdown = REFRESH_SEC;
-  loadData().then(() => startTimer());
+async function fetchSheetValues(sheetName, apiKey) {
+  const encoded = encodeURIComponent(sheetName);
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${TRACKING_SHEET_ID}/values/${encoded}!A:M?key=${apiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.values || [];
 }
 
-function startTimer() {
-  state.countdown = REFRESH_SEC;
-  _timer = setInterval(() => {
-    state.countdown--;
-    if (state.countdown <= 0) {
-      clearInterval(_timer);
-      loadData().then(() => startTimer());
-    } else {
-      // Only update the countdown display without a full re-render
-      const btn = document.querySelector('.refresh-btn');
-      if (btn) btn.textContent = `↻ ${state.countdown}s`;
-    }
-  }, 1000);
+async function syncAllScores(apiKey) {
+  // Fetch both Team Stats sheets
+  const [rows1315, rows16] = await Promise.all([
+    fetchSheetValues('13-15 Team Stats', apiKey),
+    fetchSheetValues('16+ Team Stats', apiKey),
+  ]);
+
+  const allMatches = GK.flatMap(k => GROUPS[k].matches);
+  const scores1315 = parseStatsToScores(rows1315, GROUPS['13-15'].matches);
+  const scores16   = parseStatsToScores(rows16,   ['A','B','C','D','E'].flatMap(k=>GROUPS[k].matches));
+
+  return { ...scores1315, ...scores16 };
 }
 
-/* ── Rendering helpers ──────────────────────────────────────── */
-function gdHTML(gd) {
-  if (gd > 0) return `<span class="gd-pos">+${gd}</span>`;
-  if (gd < 0) return `<span class="gd-neg">${gd}</span>`;
-  return `<span class="gd-zero">0</span>`;
+// ─── Components ───────────────────────────────────────────────────────────────
+
+function FormDots({form}) {
+  return (
+    <div className="form-dots">
+      {form.slice(-5).map((r,i)=>(
+        <div key={i} className={`fd ${r==='W'?'fd-w':r==='D'?'fd-d':'fd-l'}`}/>
+      ))}
+    </div>
+  );
 }
 
-function teamRowHTML(team, pos, totalInGroup) {
-  const zoneClass = pos <= Math.min(2, Math.ceil(totalInGroup / 2)) ? 'zone-q' : '';
-  const colour    = badgeColour(team.name);
-  const ini       = initials(team.name);
-  return `
-    <div class="t-row ${zoneClass}">
-      <div class="pos-num">${pos}</div>
-      <div class="team-cell">
-        <div class="badge" style="background:${colour}">${ini}</div>
-        <div class="tname" title="${team.name}">${team.name}</div>
+function StandingsView({gk, scores}) {
+  const rows = useMemo(()=>computeStandings(gk,scores),[gk,scores]);
+  const teams = GROUPS[gk].teams;
+  const liveCount = rows.reduce((n,r)=>n+(Object.values(scores).filter(s=>s?.fromSheets&&s?.played).length>0?1:0),0);
+  const hasLive = Object.values(scores).some(s=>s?.fromSheets);
+  const gdc = v => v>0?'gd-p':v<0?'gd-n':'gd-z';
+  const pc = i => i===0?'pos-1':i===1?'pos-2':i===2?'pos-3':'pos-num';
+  return (
+    <div>
+      <div className="tb-note">
+        <strong>Tiebreakers:</strong> Points → Goal Diff (capped ±6/match) → Goals For → Fewest Conceded → Fair Play → Coin Toss
       </div>
-      <div class="stat">${team.mp}</div>
-      <div class="stat">${team.wins}</div>
-      <div class="stat">${team.draws}</div>
-      <div class="stat">${team.losses}</div>
-      <div class="stat">${team.gf}</div>
-      <div class="stat">${team.ga}</div>
-      <div class="stat">${gdHTML(team.gd)}</div>
-      <div class="stat-pts">${team.pts}</div>
-    </div>`;
+      <div className="st-card">
+        <div className="st-card-hdr">
+          🏆 Group Standings
+          {hasLive && <span className="from-sheets-tag">⚡ Live</span>}
+        </div>
+        <table className="st">
+          <thead>
+            <tr>
+              <th>#</th><th>Team</th><th>Pl</th><th>W</th><th>D</th><th>L</th>
+              <th>GF</th><th>GA</th><th>GD</th><th>Form</th><th>Pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r,i)=>(
+              <tr key={r.team}>
+                <td><span className={pc(i)}>{i+1}</span></td>
+                <td>
+                  <div className="team-cell">
+                    <div className="team-dot" style={{background:dotColor(r.team,teams)}}/>
+                    <span className="team-txt">{r.team}</span>
+                  </div>
+                </td>
+                <td>{r.p}</td><td>{r.w}</td><td>{r.d}</td><td>{r.l}</td>
+                <td>{r.gf}</td><td>{r.ga}</td>
+                <td className={gdc(r.gdc)}>{r.gdc>0?'+':''}{r.gdc}</td>
+                <td><FormDots form={r.form}/></td>
+                <td><span className="pts-b">{r.pts}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
 
-const TABLE_HEADER = `
-  <div class="t-head">
-    <div></div>
-    <div style="text-align:left">Team</div>
-    <div>MP</div><div>W</div><div>D</div><div>L</div>
-    <div>GF</div><div>GA</div><div>GD</div><div>Pts</div>
-  </div>`;
+function MatchCard({match, score, onClick}) {
+  const played=score?.played;
+  const hg=score?.homeGoals||0, ag=score?.awayGoals||0;
+  const hy=score?.homeYellow||0, hr=score?.homeRed||0;
+  const ay=score?.awayYellow||0, ar=score?.awayRed||0;
+  let hCls='', aCls='';
+  if(played){if(hg>ag){hCls='win';aCls='loss';}else if(hg<ag){hCls='loss';aCls='win';}}
+  const hasPips = hy+hr+ay+ar>0;
+  return (
+    <div className="match-card" onClick={onClick}>
+      <div className="mc-top">
+        <span className="mc-time">⏱ {match.time}</span>
+        <div className="mc-status-row">
+          {score?.fromSheets && played && <span className="sheets-tag">⚡ Sheets</span>}
+          <span className={`mc-status ${played?'st-final':'st-upcoming'}`}>{played?'Final':'Upcoming'}</span>
+        </div>
+      </div>
+      <div className="mc-body">
+        <div className={`mc-team right ${hCls}`}>{match.home}</div>
+        <div className="mc-score-wrap">
+          {played
+            ? <div className="mc-score">{hg}<span className="mc-dash">–</span>{ag}</div>
+            : <div className="mc-vs">VS</div>
+          }
+          {hasPips && (
+            <div className="mc-pips">
+              {Array.from({length:hy}).map((_,i)=><span key={`hy${i}`} className="pip pip-y"/>)}
+              {Array.from({length:hr}).map((_,i)=><span key={`hr${i}`} className="pip pip-r"/>)}
+              {(hy+hr>0&&ay+ar>0)&&<span style={{color:'#e5e7eb',fontSize:'0.55rem',margin:'0 2px'}}>|</span>}
+              {Array.from({length:ay}).map((_,i)=><span key={`ay${i}`} className="pip pip-y"/>)}
+              {Array.from({length:ar}).map((_,i)=><span key={`ar${i}`} className="pip pip-r"/>)}
+            </div>
+          )}
+        </div>
+        <div className={`mc-team left ${aCls}`}>{match.away}</div>
+      </div>
+      <div className="mc-hint">TAP TO {played?'EDIT':'ENTER'} SCORE</div>
+    </div>
+  );
+}
 
-function renderStandingsSection(teams, groupFilter, is16) {
-  if (!teams.length) {
-    return `<div class="empty-state">⚽ No data yet — check back once matches begin!</div>`;
-  }
+function ScheduleView({gk, scores, onScoreChange}) {
+  const [editing, setEditing] = useState(null);
+  const grp = GROUPS[gk];
+  const played = grp.matches.filter(m=>scores[m.id]?.played).length;
+  return (
+    <div>
+      <div style={{fontSize:'0.66rem',color:'#aaa',marginBottom:'10px',fontWeight:'600'}}>
+        {played}/{grp.matches.length} matches scored · 📍 {grp.location}
+      </div>
+      {grp.matches.map(m=>(
+        <MatchCard key={m.id} match={m} score={scores[m.id]} onClick={()=>setEditing(m)}/>
+      ))}
+      {editing && (
+        <ScoreModal match={editing} score={scores[editing.id]}
+          onSave={sc=>{onScoreChange(editing.id,sc);setEditing(null);}}
+          onClose={()=>setEditing(null)}/>
+      )}
+    </div>
+  );
+}
 
-  if (groupFilter === 'all' && is16) {
-    /* Show per-group tables */
-    const groups = getGroups(teams);
-    if (!groups.length) {
-      /* Fallback: no group info yet, show one flat table */
-      const sorted = sortTeams(teams);
-      return `
-        <div class="group-section">
-          <div class="table-card">
-            ${TABLE_HEADER}
-            ${sorted.map((t, i) => teamRowHTML(t, i + 1, sorted.length)).join('')}
+function CardsView({gk, scores}) {
+  const rows = useMemo(()=>computeStandings(gk,scores),[gk,scores]);
+  const sorted = [...rows].sort((a,b)=>(a.y+a.r*3)-(b.y+b.r*3));
+  return (
+    <div>
+      <div className="fp-card">
+        <div className="fp-hdr">Fair Play — Fewest cards ranks highest</div>
+        {sorted.map((r,i)=>(
+          <div className="fp-row" key={r.team}>
+            <span className="fp-rank">{i+1}</span>
+            <span className="fp-name">{r.team}</span>
+            <div className="fp-cards">
+              <div className="fp-pill"><span className="fc-icon fc-y"/>{r.y}</div>
+              <div className="fp-pill"><span className="fc-icon fc-r"/>{r.r}</div>
+              <span className="fp-pts">FP: {r.fp}</span>
+            </div>
           </div>
-        </div>`;
-    }
-    return groups.map(g => {
-      const gt = sortTeams(teams.filter(t => t.group === g));
-      return `
-        <div class="group-section">
-          <div class="group-label">Group ${g}</div>
-          <div class="table-card">
-            ${TABLE_HEADER}
-            ${gt.map((t, i) => teamRowHTML(t, i + 1, gt.length)).join('')}
+        ))}
+      </div>
+      <div style={{textAlign:'center',fontSize:'0.63rem',color:'#ccc',padding:'4px 0'}}>
+        Fair Play: −1 per yellow · −3 per red
+      </div>
+    </div>
+  );
+}
+
+function CBtn({value, onChange, label, color}) {
+  return (
+    <div className="cb-team">
+      <div className="cbt-lbl" style={{color}} title={label}>{label}</div>
+      <div className="cbt-ctrl">
+        <button className="cbt-btn" onClick={()=>onChange(Math.max(0,value-1))}>−</button>
+        <span className="cbt-val" style={{color}}>{value}</span>
+        <button className="cbt-btn" onClick={()=>onChange(value+1)}>+</button>
+      </div>
+    </div>
+  );
+}
+
+function ScoreModal({match, score, onSave, onClose}) {
+  const init=score||{};
+  const [hg,setHg]=useState(init.homeGoals||0);
+  const [ag,setAg]=useState(init.awayGoals||0);
+  const [hy,setHy]=useState(init.homeYellow||0);
+  const [ay,setAy]=useState(init.awayYellow||0);
+  const [hr,setHr]=useState(init.homeRed||0);
+  const [ar,setAr]=useState(init.awayRed||0);
+  const gd=hg-ag, cgd=Math.max(-CAP,Math.min(CAP,gd));
+  let rLabel='Draw', rCls='rp-d';
+  if(gd>0){rLabel=`${match.home} Win`;rCls='rp-h';}
+  if(gd<0){rLabel=`${match.away} Win`;rCls='rp-a';}
+  const save=()=>onSave({homeGoals:hg,awayGoals:ag,homeYellow:hy,awayYellow:ay,homeRed:hr,awayRed:ar,played:true});
+  const clear=()=>onSave({homeGoals:0,awayGoals:0,homeYellow:0,awayYellow:0,homeRed:0,awayRed:0,played:false});
+  return (
+    <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="sheet">
+        <div className="sheet-handle"/>
+        <div className="sheet-hdr">
+          <div><div className="sheet-title">Enter Score</div><div className="sheet-time">⏱ {match.time}</div></div>
+          <button className="close-btn" onClick={onClose}>✕</button>
+        </div>
+        <div className={`result-pill ${rCls}`}>{rLabel} · GD {cgd>0?'+':''}{cgd} (capped ±{CAP})</div>
+        <div className="score-row">
+          <div className="team-blk">
+            <div className="tb-name">{match.home}</div>
+            <div className="sc-pick">
+              <button className={`sc-btn${hg===0?' dim':''}`} onClick={()=>setHg(Math.max(0,hg-1))}>−</button>
+              <div className="sc-val">{hg}</div>
+              <button className="sc-btn" onClick={()=>setHg(hg+1)}>+</button>
+            </div>
           </div>
-        </div>`;
-    }).join('');
-
-  } else {
-    /* Single table for selected group or 13-15 */
-    const filtered = groupFilter !== 'all'
-      ? teams.filter(t => t.group === groupFilter)
-      : teams;
-    const sorted = sortTeams(filtered);
-    const label  = groupFilter !== 'all' ? `<div class="group-label">Group ${groupFilter}</div>` : '';
-    return `
-      <div class="group-section">
-        ${label}
-        <div class="table-card">
-          ${TABLE_HEADER}
-          ${sorted.map((t, i) => teamRowHTML(t, i + 1, sorted.length)).join('')}
+          <div className="sc-sep">–</div>
+          <div className="team-blk">
+            <div className="tb-name">{match.away}</div>
+            <div className="sc-pick">
+              <button className={`sc-btn${ag===0?' dim':''}`} onClick={()=>setAg(Math.max(0,ag-1))}>−</button>
+              <div className="sc-val">{ag}</div>
+              <button className="sc-btn" onClick={()=>setAg(ag+1)}>+</button>
+            </div>
+          </div>
         </div>
-      </div>`;
-  }
-}
-
-/* ── Main render ────────────────────────────────────────────── */
-function render() {
-  const { division, group, data, loading, error, lastUpdated, countdown } = state;
-  const teams  = data[division];
-  const is16   = division === '16plus';
-  const groups = is16 ? getGroups(teams) : [];
-
-  /* Status bar text */
-  const updStr = lastUpdated
-    ? lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    : '–';
-  const statusHTML = lastUpdated
-    ? `<div class="live-badge"><div class="live-dot"></div>LIVE &nbsp;·&nbsp; ${updStr}</div>`
-    : `<div class="offline-badge">⚠ Not connected</div>`;
-
-  /* Group filter buttons */
-  const groupBarHTML = is16 && groups.length ? `
-    <div class="group-bar">
-      <button class="grp-btn ${group === 'all' ? 'active' : ''}" onclick="setGroup('all')">All Groups</button>
-      ${groups.map(g => `
-        <button class="grp-btn ${group === g ? 'active' : ''}" onclick="setGroup('${g}')">Group ${g}</button>
-      `).join('')}
-    </div>` : '';
-
-  /* Legend */
-  const legendHTML = `
-    <div class="legend">
-      <div class="legend-item">
-        <div class="legend-dot" style="background:#27ae60"></div>
-        Advancing to knockouts
-      </div>
-    </div>`;
-
-  /* Main content */
-  let contentHTML;
-  if (loading) {
-    contentHTML = `
-      <div class="loading-wrap">
-        <div class="spinner"></div>
-        <div class="loading-text">Loading live scores…</div>
-      </div>`;
-  } else if (error) {
-    contentHTML = `
-      <div class="error-wrap">
-        <div class="error-icon">⚠️</div>
-        <div class="error-title">Could not load data</div>
-        <div class="error-msg">${error}</div>
-        <div class="error-hint">
-          <strong>Fix:</strong> Make sure the Google Sheet is shared as<br>
-          <strong>"Anyone with the link → Viewer"</strong><br>
-          (File → Share → Share with others → change access)
+        <div className="cards-blk">
+          <div className="cb-hdr" style={{color:'#ca8a04'}}>
+            <span className="cb-icon" style={{background:'#fde047',border:'1px solid #ca8a04',borderRadius:'2px'}}/> Yellow Cards
+          </div>
+          <div className="cb-row">
+            <CBtn value={hy} onChange={setHy} label={match.home} color="#ca8a04"/>
+            <CBtn value={ay} onChange={setAy} label={match.away} color="#ca8a04"/>
+          </div>
         </div>
-        <br>
-        <button class="retry-btn" onclick="manualRefresh()">Retry</button>
-      </div>`;
-  } else {
-    contentHTML = renderStandingsSection(teams, is16 ? group : 'all', is16)
-                + legendHTML;
-  }
-
-  document.getElementById('app').innerHTML = `
-    <!-- ── Header ── -->
-    <div class="header">
-      <div class="header-logo-row">
-        <div class="header-icon">⚽</div>
-        <div class="header-titles">
-          <div class="header-title">ISCC 2026</div>
-          <div class="header-subtitle">Ismaili Soccer Champions Cup · Central Scoring</div>
+        <div className="cards-blk">
+          <div className="cb-hdr" style={{color:'#dc2626'}}>
+            <span className="cb-icon" style={{background:'#f87171',border:'1px solid #dc2626',borderRadius:'2px'}}/> Red Cards
+          </div>
+          <div className="cb-row">
+            <CBtn value={hr} onChange={setHr} label={match.home} color="#dc2626"/>
+            <CBtn value={ar} onChange={setAr} label={match.away} color="#dc2626"/>
+          </div>
         </div>
-        <div class="season-pill">April 2026</div>
-      </div>
-
-      <div class="div-tabs">
-        <div class="div-tab ${division === '16plus' ? 'active' : ''}"
-             onclick="setDivision('16plus')">Men's 16+</div>
-        <div class="div-tab ${division === '1315'   ? 'active' : ''}"
-             onclick="setDivision('1315')">Boys 13–15</div>
+        <button className="btn-save" onClick={save}>✓ Save Score</button>
+        {score?.played && <button className="btn-clear" onClick={clear}>✕ Clear Result</button>}
       </div>
     </div>
-
-    <!-- ── Status Bar ── -->
-    <div class="status-bar">
-      ${statusHTML}
-      <button class="refresh-btn" onclick="manualRefresh()">↻ ${countdown}s</button>
-    </div>
-
-    <!-- ── Group Filter ── -->
-    ${groupBarHTML}
-
-    <!-- ── Content ── -->
-    <div class="content">
-      ${contentHTML}
-    </div>
-
-    <div class="footer">
-      Auto-refreshes every ${REFRESH_SEC}s &nbsp;·&nbsp; ISCC 2026 Houston
-    </div>
-  `;
+  );
 }
 
-/* ── State setters (called from onclick) ────────────────────── */
-function setDivision(d) {
-  state.division = d;
-  state.group    = 'all';
-  render();
-}
-function setGroup(g) {
-  state.group = g;
-  render();
+function SettingsPanel({apiKey, onSave, onClose}) {
+  const [val, setVal] = useState(apiKey||'');
+  return (
+    <div className="settings-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="settings-sheet">
+        <div className="settings-handle"/>
+        <div className="settings-title">🔑 Connect to Google Sheets</div>
+        <div className="settings-sub">
+          A free API key lets the app pull live scores directly from your Tracking spreadsheet every time you tap Sync.
+        </div>
+
+        <div className="settings-step">
+          <div className="step-hdr"><span className="step-num">1</span> Go to Google Cloud Console</div>
+          <div className="step-body">
+            Open <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a> and sign in with your Google account. Create a new project (any name, e.g. <code>ISCC Scoring</code>).
+          </div>
+        </div>
+        <div className="settings-step">
+          <div className="step-hdr"><span className="step-num">2</span> Enable Google Sheets API</div>
+          <div className="step-body">
+            Go to <strong>APIs &amp; Services → Library</strong>, search for <code>Google Sheets API</code>, and click <strong>Enable</strong>.
+          </div>
+        </div>
+        <div className="settings-step">
+          <div className="step-hdr"><span className="step-num">3</span> Create an API Key</div>
+          <div className="step-body">
+            Go to <strong>APIs &amp; Services → Credentials → Create Credentials → API key</strong>. Copy the key and paste it below.
+            Optionally restrict it to <em>Google Sheets API</em> for security.
+          </div>
+        </div>
+
+        <div className="api-input-row">
+          <input
+            className="api-input"
+            placeholder="AIzaSy..."
+            value={val}
+            onChange={e=>setVal(e.target.value)}
+            spellCheck={false}
+          />
+          <button className="btn-primary" onClick={()=>onSave(val.trim())}>Save</button>
+        </div>
+        <div className="api-note">
+          Your key is stored only in this browser session (never sent anywhere except Google's servers to read your own sheet).
+        </div>
+        {apiKey && (
+          <button className="btn-outline" onClick={()=>{onSave('');onClose();}}>Remove API Key</button>
+        )}
+      </div>
+    </div>
+  );
 }
 
-/* ── Boot ───────────────────────────────────────────────────── */
-loadData().then(() => startTimer());
+// ─── App ──────────────────────────────────────────────────────────────────────
+function App() {
+  const [activeGroup, setActiveGroup] = useState('13-15');
+  const [activeNav,   setActiveNav]   = useState('Standings');
+  const [scores, setScores]           = useState({});
+  const [apiKey, setApiKey]           = useState('');
+  const [showSettings, setShowSettings] = useState(false);
+  const [syncing, setSyncing]         = useState(false);
+  const [syncError, setSyncError]     = useState('');
+  const [lastSync, setLastSync]       = useState(null);
+  const [autoSync, setAutoSync]       = useState(false);
+
+  const handleScore = (id, sc) => setScores(p=>({...p,[id]:sc}));
+  const handleApiSave = key => { setApiKey(key); if(key) setShowSettings(false); };
+
+  const doSync = useCallback(async () => {
+    if (!apiKey) { setShowSettings(true); return; }
+    setSyncing(true); setSyncError('');
+    try {
+      const newScores = await syncAllScores(apiKey);
+      setScores(prev => {
+        // Live scores override manual; manual scores kept for unmatched matches
+        const merged = {...prev};
+        Object.entries(newScores).forEach(([id,sc]) => { merged[id] = sc; });
+        return merged;
+      });
+      setLastSync(new Date());
+    } catch(e) {
+      setSyncError(e.message || 'Sync failed');
+    } finally {
+      setSyncing(false);
+    }
+  }, [apiKey]);
+
+  // Auto-sync every 45 seconds when enabled
+  useEffect(() => {
+    if (!autoSync || !apiKey) return;
+    const t = setInterval(doSync, 45000);
+    return () => clearInterval(t);
+  }, [autoSync, apiKey, doSync]);
+
+  const totalPlayed = Object.values(scores).filter(s=>s?.played).length;
+  const totalMatches = GK.reduce((a,k)=>a+GROUPS[k].matches.length, 0);
+  const standings = useMemo(()=>computeStandings(activeGroup,scores),[activeGroup,scores]);
+  const grp = GROUPS[activeGroup];
+  const gPlayed = grp.matches.filter(m=>scores[m.id]?.played).length;
+  const leader = standings[0];
+  const hasLive = Object.values(scores).some(s=>s?.fromSheets);
+
+  const fmtTime = d => d ? d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : null;
+
+  return (
+    <div>
+      {/* Hero */}
+      <div className="hero">
+        <div className="hero-top">
+          <div>
+            <div className="hero-label">Tournament Scoring</div>
+            <div className="hero-title">ISCC 2026</div>
+          </div>
+          <div className="hero-right">
+            <div className="hero-badge">{totalPlayed}/{totalMatches} Played</div>
+            <div className="live-dot">
+              <span className={hasLive?'pulse':'off'}/>
+              {hasLive ? 'Live from Sheets' : 'Manual Mode'}
+            </div>
+          </div>
+        </div>
+        <div className="hero-season">⚽ Ismaili Soccer Champions Cup · April 2026 · Houston, TX</div>
+      </div>
+
+      {/* Sticky nav */}
+      <div className="tab-shell">
+        <div className="group-bar">
+          {GK.map(k=>(
+            <div key={k} className={`gpill ${activeGroup===k?'active':''}`} onClick={()=>setActiveGroup(k)}>
+              {GROUPS[k].tab}
+            </div>
+          ))}
+        </div>
+        <div className="nav-tabs">
+          {['Standings','Schedule','Fair Play'].map(t=>(
+            <div key={t} className={`nav-tab ${activeNav===t?'active':''}`} onClick={()=>setActiveNav(t)}>{t}</div>
+          ))}
+        </div>
+      </div>
+
+      {/* Sync bar */}
+      <div className="sync-bar">
+        <div>
+          {syncError
+            ? <div className="sync-error">⚠ {syncError}</div>
+            : lastSync
+              ? <div className="sync-ok">⚡ Synced {fmtTime(lastSync)}</div>
+              : <div className="sync-info">
+                  {apiKey ? <><strong>API key set</strong> · tap Sync to load live scores</> : 'No API key · manual mode active'}
+                </div>
+          }
+        </div>
+        <div style={{display:'flex',gap:'6px',alignItems:'center'}}>
+          <button
+            style={{
+              fontSize:'0.62rem', fontWeight:'700', color: autoSync?'#16a34a':'#aaa',
+              background:'none', border:'none', cursor:'pointer', padding:'4px 0',
+              display: apiKey?'block':'none'
+            }}
+            onClick={()=>setAutoSync(v=>!v)}
+            title="Auto-refresh every 45s"
+          >
+            {autoSync ? '🔄 Auto on' : '🔄 Auto off'}
+          </button>
+          <button className="sync-btn" disabled={syncing} onClick={doSync}>
+            {syncing
+              ? <><span className="spin">↻</span> Syncing…</>
+              : apiKey ? '⚡ Sync' : '🔑 Setup'
+            }
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="content">
+        {/* Stats strip */}
+        <div className="strip" style={{marginTop:'12px'}}>
+          <div className="strip-card">
+            <div className="strip-val">{gPlayed}/{grp.matches.length}</div>
+            <div className="strip-lbl">Played</div>
+          </div>
+          <div className="strip-card">
+            <div className="strip-val" style={{fontSize:leader.pts>0?'0.9rem':'1.25rem',paddingTop:'2px'}}>
+              {leader.pts>0 ? leader.team.split(' ')[0] : '—'}
+            </div>
+            <div className="strip-lbl">Leader</div>
+          </div>
+          <div className="strip-card">
+            <div className="strip-val">{leader.pts>0?leader.pts:'—'}</div>
+            <div className="strip-lbl">Top Pts</div>
+          </div>
+        </div>
+
+        {activeNav==='Standings' && <StandingsView gk={activeGroup} scores={scores}/>}
+        {activeNav==='Schedule'  && <ScheduleView  gk={activeGroup} scores={scores} onScoreChange={handleScore}/>}
+        {activeNav==='Fair Play' && <CardsView     gk={activeGroup} scores={scores}/>}
+      </div>
+
+      <div className="footer">
+        ISCC 2026 · 6 divisions · 28 teams · 56 matches<br/>
+        Win = 3 pts · Draw = 1 pt · GD capped ±6/match
+      </div>
+
+      {showSettings && <SettingsPanel apiKey={apiKey} onSave={handleApiSave} onClose={()=>setShowSettings(false)}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
 </html>
