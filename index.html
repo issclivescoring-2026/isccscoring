@@ -446,6 +446,7 @@ const { useState, useMemo, useEffect, useCallback } = React;
 // ─── Sheet IDs ────────────────────────────────────────────────────────────────
 // The Tracking sheet is the source of truth (Dashboard IMPORTRANGEs from it)
 const TRACKING_SHEET_ID = '1guJ2zKMBAuMr7zwReJh1YHSxkk1BmBkx6zKpKo_zh6I';
+const DEFAULT_API_KEY   = 'AIzaSyCsWuSBr7Z4Mqq1NsTRKYevEPXXGRv4Ct8';
 
 // ─── Tournament Data ──────────────────────────────────────────────────────────
 const GROUPS = {
@@ -954,7 +955,7 @@ function App() {
   const [activeGroup, setActiveGroup] = useState('13-15');
   const [activeNav,   setActiveNav]   = useState('Standings');
   const [scores, setScores]           = useState({});
-  const [apiKey, setApiKey]           = useState('');
+  const [apiKey, setApiKey]           = useState(DEFAULT_API_KEY);
   const [showSettings, setShowSettings] = useState(false);
   const [syncing, setSyncing]         = useState(false);
   const [syncError, setSyncError]     = useState('');
@@ -982,6 +983,9 @@ function App() {
       setSyncing(false);
     }
   }, [apiKey]);
+
+  // Auto-sync on first load
+  useEffect(() => { doSync(); }, []);
 
   // Auto-sync every 45 seconds when enabled
   useEffect(() => {
@@ -1043,17 +1047,14 @@ function App() {
             ? <div className="sync-error">⚠ {syncError}</div>
             : lastSync
               ? <div className="sync-ok">⚡ Synced {fmtTime(lastSync)}</div>
-              : <div className="sync-info">
-                  {apiKey ? <><strong>API key set</strong> · tap Sync to load live scores</> : 'No API key · manual mode active'}
-                </div>
+              : <div className="sync-info"><strong>Live</strong> · loading scores…</div>
           }
         </div>
         <div style={{display:'flex',gap:'6px',alignItems:'center'}}>
           <button
             style={{
               fontSize:'0.62rem', fontWeight:'700', color: autoSync?'#16a34a':'#aaa',
-              background:'none', border:'none', cursor:'pointer', padding:'4px 0',
-              display: apiKey?'block':'none'
+              background:'none', border:'none', cursor:'pointer', padding:'4px 0'
             }}
             onClick={()=>setAutoSync(v=>!v)}
             title="Auto-refresh every 45s"
@@ -1063,7 +1064,7 @@ function App() {
           <button className="sync-btn" disabled={syncing} onClick={doSync}>
             {syncing
               ? <><span className="spin">↻</span> Syncing…</>
-              : apiKey ? '⚡ Sync' : '🔑 Setup'
+              : '⚡ Sync'
             }
           </button>
         </div>
