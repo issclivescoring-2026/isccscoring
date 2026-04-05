@@ -344,6 +344,63 @@
 
     .footer { text-align: center; padding: 20px 16px 36px; font-size: 0.61rem; color: #ccc; }
 
+    /* ── Playoff Bracket ── */
+    .playoff-round-hdr {
+      display: flex; align-items: center; gap: 8px;
+      padding: 14px 0 8px;
+      font-size: 0.65rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.12em; color: #7b2fbe;
+    }
+    .playoff-round-hdr::after {
+      content: ''; flex: 1; height: 1px; background: #e8e0f5;
+    }
+    .po-card {
+      background: white; border-radius: 14px;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.07);
+      margin-bottom: 8px; overflow: hidden;
+    }
+    .po-card.po-final {
+      border: 2px solid #7b2fbe;
+      box-shadow: 0 2px 12px rgba(123,47,190,0.18);
+    }
+    .po-top {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 7px 12px 0;
+      font-size: 0.6rem; color: #aaa; font-weight: 600;
+    }
+    .po-label { font-weight: 800; color: #5b1fa8; font-size: 0.62rem; letter-spacing: 0.04em; }
+    .po-status-final { background: #dcfce7; color: #16a34a; font-size: 0.58rem; font-weight: 700; padding: 2px 7px; border-radius: 8px; }
+    .po-status-live  { background: #fef3c7; color: #ca8a04; font-size: 0.58rem; font-weight: 700; padding: 2px 7px; border-radius: 8px; }
+    .po-status-up    { background: #f0f0f5; color: #aaa;    font-size: 0.58rem; font-weight: 700; padding: 2px 7px; border-radius: 8px; }
+    .po-body {
+      display: flex; align-items: center; padding: 8px 12px 10px; gap: 6px;
+    }
+    .po-team {
+      flex: 1; font-size: 0.82rem; font-weight: 700; color: #1a1a2e;
+      line-height: 1.2;
+    }
+    .po-team.seed { color: #aaa; font-style: italic; font-weight: 600; }
+    .po-team.winner { color: #16a34a; }
+    .po-team.loser  { color: #ccc; text-decoration: line-through; }
+    .po-team.right  { text-align: right; }
+    .po-score-wrap { text-align: center; min-width: 52px; }
+    .po-score { font-size: 1.3rem; font-weight: 900; color: #1a1a2e; letter-spacing: -0.03em; }
+    .po-score .po-dash { color: #d1d5db; font-weight: 300; margin: 0 2px; }
+    .po-vs { font-size: 0.7rem; font-weight: 800; color: #e5e7eb; }
+    .po-bye { font-size: 0.58rem; color: #c4b5fd; font-weight: 700; background: #f5f0ff; padding: 1px 7px; border-radius: 6px; }
+    .po-field { font-size: 0.58rem; color: #bbb; }
+    .playoff-note {
+      background: #f5f0ff; border-left: 3px solid #7b2fbe;
+      padding: 8px 12px; border-radius: 0 8px 8px 0;
+      font-size: 0.67rem; color: #5b1fa8; margin-bottom: 12px; line-height: 1.5;
+    }
+    .po-sheet-tag {
+      background: #dcfce7; color: #16a34a;
+      font-size: 0.56rem; font-weight: 700;
+      padding: 1px 6px; border-radius: 6px;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+
     @media (max-width: 380px) {
       .mc-team { font-size: 0.76rem; }
       .mc-score { font-size: 1.4rem; }
@@ -353,12 +410,86 @@
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const { useState, useMemo, useEffect, useCallback } = React;
+const { useState, useMemo, useEffect, useCallback, useRef } = React;
 
 // ─── Sheet IDs ────────────────────────────────────────────────────────────────
-// The Tracking sheet is the source of truth (Dashboard IMPORTRANGEs from it)
 const TRACKING_SHEET_ID = '1guJ2zKMBAuMr7zwReJh1YHSxkk1BmBkx6zKpKo_zh6I';
 const DEFAULT_API_KEY   = 'AIzaSyCsWuSBr7Z4Mqq1NsTRKYevEPXXGRv4Ct8';
+// Playoff bracket structure is hardcoded below; live scores come from
+// the same tracking sheet used for group stage (see PLAYOFF_GROUP_MAP_16 / _1315).
+
+// ─── 16+ Playoff Bracket ──────────────────────────────────────────────────────
+// Seeds 1–10 receive byes to R16; Seeds 11–22 compete in Prelims
+// Team names sourced directly from the playoff schedule sheet
+const PLAYOFF_ROUNDS_16PLUS = [
+  {
+    id: 'prelims', label: 'Preliminary Round',
+    note: 'Seeds 11–22 compete — winners advance to Round of 16',
+    matches: [
+      { id:'p1', label:'Prelim 1', time:'8:00–8:50',  field:'Field 7C', home:'Vintage 7',            away:'All Stars FC',       seed:'#11 vs #22', advanceTo:'R16-1' },
+      { id:'p2', label:'Prelim 2', time:'8:00–8:50',  field:'Field 7B', home:'Richmond United',       away:'Dribblers FC',       seed:'#12 vs #21', advanceTo:'R16-2' },
+      { id:'p3', label:'Prelim 3', time:'8:00–8:50',  field:'Field 7A', home:'West Coast Best Coast', away:'Strikers FC',        seed:'#13 vs #20', advanceTo:'R16-3' },
+      { id:'p4', label:'Prelim 4', time:'8:50–9:40',  field:'Field 7C', home:'Houston United FC',     away:'Florida United FC',  seed:'#14 vs #19', advanceTo:'R16-4' },
+      { id:'p5', label:'Prelim 5', time:'8:50–9:40',  field:'Field 7B', home:'Red Card Merchants FC', away:'Mandem FC',          seed:'#15 vs #18', advanceTo:'R16-5' },
+      { id:'p6', label:'Prelim 6', time:'8:50–9:40',  field:'Field 7A', home:'Dallas Dingbats',       away:'Atlanta FC',         seed:'#16 vs #17', advanceTo:'R16-6' },
+    ]
+  },
+  {
+    id: 'r16', label: 'Round of 16',
+    note: 'Seeds 1–10 join with byes · Seeds 8 & 9 face each other (7 prelim winners)',
+    matches: [
+      { id:'r1', label:'R16-1', time:'9:40–10:30',  field:'Field 7C', home:'Pamir NY',          away:'W-Prelim 1', seed:'#1 vs W-P1' },
+      { id:'r3', label:'R16-3', time:'9:40–10:30',  field:'Field 7A', home:'Afg Kickers',        away:'W-Prelim 3', seed:'#3 vs W-P3' },
+      { id:'r2', label:'R16-2', time:'10:30–11:20', field:'Field 7A', home:'Premier FC',         away:'W-Prelim 2', seed:'#2 vs W-P2' },
+      { id:'r4', label:'R16-4', time:'10:30–11:20', field:'Field 7B', home:'Ballers FC',         away:'W-Prelim 4', seed:'#4 vs W-P4' },
+      { id:'r7', label:'R16-7', time:'10:30–11:20', field:'Field 7C', home:'FC Memphis Howlers', away:'Seven XI',   seed:'#7 vs #10'  },
+      { id:'r6', label:'R16-6', time:'11:20–12:10', field:'Field 7A', home:'ATL ACE',            away:'W-Prelim 6', seed:'#6 vs W-P6' },
+      { id:'r5', label:'R16-5', time:'11:20–12:10', field:'Field 7B', home:'Etihad FC',          away:'W-Prelim 5', seed:'#5 vs W-P5' },
+      { id:'r8', label:'R16-8', time:'11:20–12:10', field:'Field 7C', home:'Brooklyn 04',        away:'Chicago Strikers', seed:'#8 vs #9' },
+    ]
+  },
+  {
+    id: 'qf', label: 'Quarter-Finals',
+    matches: [
+      { id:'qf2', label:'QF2', time:'12:10–1:00', field:'Field 7A', home:'W-R16-2', away:'W-R16-7' },
+      { id:'qf1', label:'QF1', time:'1:00–1:50',  field:'Field 7A', home:'W-R16-1', away:'W-R16-8' },
+      { id:'qf3', label:'QF3', time:'1:00–1:50',  field:'Field 7B', home:'W-R16-3', away:'W-R16-6' },
+      { id:'qf4', label:'QF4', time:'1:00–1:50',  field:'Field 7C', home:'W-R16-4', away:'W-R16-5' },
+    ]
+  },
+  {
+    id: 'sf', label: 'Semi-Finals',
+    matches: [
+      { id:'sf2', label:'SF2', time:'2:20–3:10', field:'Field 7A', home:'W-QF1', away:'W-QF4' },
+      { id:'sf1', label:'SF1', time:'2:20–3:10', field:'Field 7B', home:'W-QF2', away:'W-QF3' },
+    ]
+  },
+  {
+    id: 'final', label: '🏆 Championship Final',
+    matches: [
+      { id:'fin', label:'FINAL', time:'3:40–4:30', field:'Field 7A', home:'W-SF1', away:'W-SF2' },
+    ]
+  },
+];
+
+// ─── 13-15 Playoff Bracket ────────────────────────────────────────────────────
+// Simple 4-team single elimination — all on HSF Fields 5A & 5B
+const PLAYOFF_ROUNDS_1315 = [
+  {
+    id: 'sf_1315', label: 'Semi-Finals',
+    note: '4-team single elimination · top 4 seeds from group stage',
+    matches: [
+      { id:'sf1_1315', label:'SF1', time:'9:30–10:20', field:'Field 5A', home:'MKB A',        away:'Midfielders FC', seed:'#1 vs #4' },
+      { id:'sf2_1315', label:'SF2', time:'9:30–10:20', field:'Field 5B', home:'Defenders FC', away:'MKB B',          seed:'#2 vs #3' },
+    ]
+  },
+  {
+    id: 'final_1315', label: '🏆 Championship Final',
+    matches: [
+      { id:'fin_1315', label:'FINAL', time:'11:00–11:50', field:'Field 5A', home:'W-SF1', away:'W-SF2' },
+    ]
+  },
+];
 
 // ─── Tournament Data ──────────────────────────────────────────────────────────
 const GROUPS = {
@@ -580,7 +711,7 @@ function parseStatsToScores(rows, allMatches) {
 
 async function fetchSheetValues(sheetName, apiKey) {
   const encoded = encodeURIComponent(sheetName);
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${TRACKING_SHEET_ID}/values/${encoded}!A:M?key=${apiKey}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${TRACKING_SHEET_ID}/values/${encoded}!A:Z?key=${apiKey}`;
   const res = await fetch(url);
   if (!res.ok) {
     const err = await res.json().catch(()=>({}));
@@ -602,6 +733,89 @@ async function syncAllScores(apiKey) {
   const scores16   = parseStatsToScores(rows16,   ['A','B','C','D','E'].flatMap(k=>GROUPS[k].matches));
 
   return { ...scores1315, ...scores16 };
+}
+
+// ─── Playoff Sheet Sync ───────────────────────────────────────────────────────
+// Reads playoff data from the same tracking sheet used for group stage scoring.
+// Uses the "Group" column to map rows to bracket match IDs.
+// "Scored?" = TRUE triggers score display, same logic as group stage.
+
+// Group column value → bracket match ID  (16+ division)
+const PLAYOFF_GROUP_MAP_16 = {
+  'Prelims 1':'p1','Prelims 2':'p2','Prelims 3':'p3',
+  'Prelims 4':'p4','Prelims 5':'p5','Prelims 6':'p6',
+  'R16 - 1':'r1','R16 - 2':'r2','R16 - 3':'r3','R16 - 4':'r4',
+  'R16 - 5':'r5','R16 - 6':'r6','R16 - 7':'r7','R16 - 8':'r8',
+  'QF1':'qf1','QF2':'qf2','QF3':'qf3','QF4':'qf4',
+  'SF1':'sf1','SF2':'sf2','Final':'fin',
+};
+
+// Group column value → bracket match ID  (13-15 division)
+const PLAYOFF_GROUP_MAP_1315 = {
+  'SF1':'sf1_1315','SF2':'sf2_1315','Final':'fin_1315',
+};
+
+// Parse raw sheet rows into { matchId: { home, away, homeScore, awayScore } }
+// Row order within a match determines home (first) vs away (second).
+function parsePlayoffRows(rows, groupMap) {
+  if (!rows || rows.length < 2) return {};
+  const header = rows[0].map(h => (h||'').toString().toLowerCase().replace(/[\s?]/g,''));
+  const idx    = k => header.indexOf(k);
+  const teamI   = idx('teamname');
+  const goalsI  = idx('goals');
+  const concI   = idx('goalsconceded');
+  const scoredI = header.findIndex(h => h === 'scored');
+  const groupI  = idx('group');
+  if (groupI < 0 || teamI < 0) return {};
+
+  // Collect entries per match ID, preserving sheet row order
+  const byMatch = {};
+  for (const row of rows.slice(1)) {
+    const groupVal = (row[groupI] || '').toString().trim();
+    if (!groupVal) continue;
+    const matchId = groupMap[groupVal];
+    if (!matchId) continue;
+    const team = (row[teamI] || '').toString().trim();
+    if (!team) continue;
+    const scored = row[scoredI];
+    if (!byMatch[matchId]) byMatch[matchId] = [];
+    byMatch[matchId].push({
+      team,
+      goals:    parseFloat(row[goalsI])  || 0,
+      conceded: parseFloat(row[concI])   || 0,
+      scored:   scored === 'TRUE' || scored === true || scored === 'True',
+    });
+  }
+
+  const result = {};
+  for (const [matchId, entries] of Object.entries(byMatch)) {
+    const e0 = entries[0];
+    const e1 = entries[1] || null;
+    const anyScored = e0.scored || (e1 && e1.scored);
+    result[matchId] = {
+      home:      e0.team,
+      away:      e1 ? e1.team : null,
+      homeScore: (anyScored && e1) ? e0.goals    : null,
+      awayScore: (anyScored && e1) ? e1.goals    : null,
+      fromSheet: true,
+    };
+  }
+  return result;
+}
+
+async function fetchPlayoffData(apiKey) {
+  try {
+    const [rows16, rows1315] = await Promise.all([
+      fetchSheetValues('16+ Team Stats', apiKey),
+      fetchSheetValues('13-15 Team Stats', apiKey),
+    ]);
+    const data16   = parsePlayoffRows(rows16,   PLAYOFF_GROUP_MAP_16);
+    const data1315 = parsePlayoffRows(rows1315, PLAYOFF_GROUP_MAP_1315);
+    return { ...data16, ...data1315 };
+  } catch(e) {
+    console.error('fetchPlayoffData error:', e);
+    return {};
+  }
 }
 
 // ─── Components ───────────────────────────────────────────────────────────────
@@ -746,6 +960,353 @@ function CardsView({gk, scores}) {
 }
 
 
+// ─── Bracket Constants & Helpers ──────────────────────────────────────────────
+const B_SLOT_H = 74;   // vertical space per R16 slot (px)
+const B_CARD_H = 56;   // bracket card height (px)
+const B_GAP    = 5;    // column gap (px)
+
+// Top of card: round r (0=R16,1=QF,2=SF,3=Final), slot s — fully responsive, no fixed width
+function bCardTopDyn(r, s) {
+  const sph = Math.pow(2, r);
+  return s * sph * B_SLOT_H + (sph * B_SLOT_H - B_CARD_H) / 2;
+}
+
+// 16+ bracket: R16 slots top→bottom. Pairs: (0,1)→QF1, (2,3)→QF4, (4,5)→QF2, (6,7)→QF3
+const R16_BRACKET = [
+  {matchId:'r1', label:'R16-1'},
+  {matchId:'r8', label:'R16-8'},
+  {matchId:'r4', label:'R16-4'},
+  {matchId:'r5', label:'R16-5'},
+  {matchId:'r2', label:'R16-2'},
+  {matchId:'r7', label:'R16-7'},
+  {matchId:'r3', label:'R16-3'},
+  {matchId:'r6', label:'R16-6'},
+];
+const QF_BRACKET = [
+  {matchId:'qf1', label:'QF1'},
+  {matchId:'qf4', label:'QF4'},
+  {matchId:'qf2', label:'QF2'},
+  {matchId:'qf3', label:'QF3'},
+];
+const SF_BRACKET = [
+  {matchId:'sf2', label:'SF2'},
+  {matchId:'sf1', label:'SF1'},
+];
+
+// ─── Bracket Match Card ────────────────────────────────────────────────────────
+// Width comes from the absolutely-positioned parent div — card itself is 100% wide.
+function BracketMatchCard({matchData, sheetData, roundLabel, isChamp}) {
+  if (!matchData) return null;
+  const sd     = sheetData[matchData.id] || {};
+  const home   = (sd.home && sd.home !== '') ? sd.home : matchData.home;
+  const away   = (sd.away && sd.away !== '') ? sd.away : matchData.away;
+  const hScore = sd.homeScore ?? null;
+  const aScore = sd.awayScore ?? null;
+  const played = hScore !== null && aScore !== null;
+  const hWin   = played && hScore > aScore;
+  const aWin   = played && aScore > hScore;
+  // Detects placeholder/TBD names — hardcoded "W-*" format OR sheet-style group names
+  const isSlot = t => !t || /^W-/i.test(t) || /^(Prelims?\s*\d|R16\s*[-–]\s*\d|QF\d|SF\d)/i.test(t);
+
+  const row = (name, score, win, isAway) => (
+    <div style={{
+      display:'flex', alignItems:'center', padding:'4px 6px',
+      borderTop: isAway ? '1px solid #f0f0f5' : 'none',
+      background: win ? '#f0fdf4' : 'white',
+    }}>
+      <span style={{
+        flex:1, fontSize:'0.58rem', lineHeight:1.25,
+        fontWeight: win ? 700 : 500,
+        color: isSlot(name) ? '#ccc' : win ? '#16a34a' : '#1a1a2e',
+        fontStyle: isSlot(name) ? 'italic' : 'normal',
+        overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
+      }}>{name}</span>
+      {played && <span style={{
+        fontWeight:700, fontSize:'0.65rem', marginLeft:'4px', flexShrink:0,
+        color: win ? '#16a34a' : '#6b7280',
+      }}>{score}</span>}
+    </div>
+  );
+  return (
+    <div style={{
+      width:'100%',
+      background: isChamp ? 'linear-gradient(135deg,#fffbeb,#fef3c7)' : 'white',
+      border:`1.5px solid ${isChamp?'#f59e0b':'#e0e0ea'}`,
+      borderRadius:'7px', overflow:'hidden',
+      boxShadow: isChamp ? '0 2px 10px rgba(245,158,11,0.22)' : '0 1px 3px rgba(0,0,0,0.07)',
+    }}>
+      <div style={{
+        padding:'2px 6px',
+        background: isChamp ? '#f59e0b' : '#f4f4f8',
+        fontSize:'0.47rem', fontWeight:700,
+        color: isChamp ? 'white' : '#aaa',
+        letterSpacing:'0.05em', textTransform:'uppercase',
+      }}>{roundLabel}</div>
+      {row(home, hScore, hWin, false)}
+      {row(away, aScore, aWin, true)}
+    </div>
+  );
+}
+
+// ─── Prelim Card (2-column grid above main bracket) ────────────────────────────
+function PrelimCard({match, sheetData}) {
+  const sd     = sheetData[match.id] || {};
+  const home   = (sd.home && sd.home !== '') ? sd.home : match.home;
+  const away   = (sd.away && sd.away !== '') ? sd.away : match.away;
+  const hScore = sd.homeScore ?? null;
+  const aScore = sd.awayScore ?? null;
+  const played = hScore !== null && aScore !== null;
+  const hWin   = played && hScore > aScore;
+  const aWin   = played && aScore > hScore;
+
+  const row = (name, score, win, isAway) => (
+    <div style={{
+      display:'flex', alignItems:'center', padding:'4px 7px',
+      borderTop: isAway ? '1px solid #f0f0f5' : 'none',
+      background: win ? '#f0fdf4' : 'white',
+    }}>
+      <span style={{
+        flex:1, fontSize:'0.6rem', fontWeight:win?700:500,
+        color:win?'#16a34a':'#1a1a2e',
+        overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
+      }}>{name}</span>
+      {played && <span style={{fontWeight:700,fontSize:'0.66rem',color:win?'#16a34a':'#6b7280',marginLeft:'4px',flexShrink:0}}>{score}</span>}
+    </div>
+  );
+  return (
+    <div style={{background:'white',borderRadius:'8px',border:'1.5px solid #ede9f7',overflow:'hidden',boxShadow:'0 1px 3px rgba(0,0,0,0.06)'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'2px 7px',background:'#f5f0ff',fontSize:'0.47rem',fontWeight:700,color:'#9333ea',letterSpacing:'0.05em',textTransform:'uppercase'}}>
+        <span>{match.label}</span>
+        <span style={{fontWeight:400,color:'#bbb'}}>{match.time} · {match.field}</span>
+      </div>
+      {row(home, hScore, hWin, false)}
+      {row(away, aScore, aWin, true)}
+    </div>
+  );
+}
+
+// ─── 16+ Bracket (fully responsive, no horizontal scroll) ────────────────────
+function Bracket16Plus({sheetData}) {
+  const cref = useRef(null);
+  const [cw, setCw] = useState(340);
+
+  useEffect(() => {
+    const measure = () => { if (cref.current) setCw(cref.current.offsetWidth); };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
+
+  // 4 columns: R16 | QF | SF | Final (prelims shown separately above)
+  const NUM_COLS = 4;
+  const gap   = B_GAP;
+  const cardW = Math.max(48, Math.floor((cw - (NUM_COLS - 1) * gap) / NUM_COLS));
+  const colX  = i => i * (cardW + gap);
+  const totalH = 8 * B_SLOT_H;
+
+  const allM  = PLAYOFF_ROUNDS_16PLUS.flatMap(r => r.matches);
+  const mById = {};
+  allM.forEach(m => mById[m.id] = m);
+
+  const cardCY = (r, s) => bCardTopDyn(r, s) + B_CARD_H / 2;
+  const lp = {stroke:'#d1d5db', strokeWidth:1.5, fill:'none'};
+  const gp = {stroke:'#f59e0b', strokeWidth:2, fill:'none'};
+  const lines = [];
+
+  // R16 → QF (4 pairs)
+  for (let q = 0; q < 4; q++) {
+    const yA = cardCY(0,q*2), yB = cardCY(0,q*2+1);
+    const xL = colX(0)+cardW, xR = colX(1), mx = (xL+xR)/2;
+    const yQ = cardCY(1,q);
+    lines.push(<g key={`rq${q}`}>
+      <line x1={xL} y1={yA} x2={mx} y2={yA} {...lp}/>
+      <line x1={xL} y1={yB} x2={mx} y2={yB} {...lp}/>
+      <line x1={mx} y1={yA} x2={mx} y2={yB} {...lp}/>
+      <line x1={mx} y1={(yA+yB)/2} x2={xR} y2={yQ} {...lp}/>
+    </g>);
+  }
+  // QF → SF (2 pairs)
+  for (let s = 0; s < 2; s++) {
+    const yA = cardCY(1,s*2), yB = cardCY(1,s*2+1);
+    const xL = colX(1)+cardW, xR = colX(2), mx = (xL+xR)/2;
+    const yS = cardCY(2,s);
+    lines.push(<g key={`qs${s}`}>
+      <line x1={xL} y1={yA} x2={mx} y2={yA} {...lp}/>
+      <line x1={xL} y1={yB} x2={mx} y2={yB} {...lp}/>
+      <line x1={mx} y1={yA} x2={mx} y2={yB} {...lp}/>
+      <line x1={mx} y1={(yA+yB)/2} x2={xR} y2={yS} {...lp}/>
+    </g>);
+  }
+  // SF → Final (gold)
+  {
+    const yA = cardCY(2,0), yB = cardCY(2,1);
+    const xL = colX(2)+cardW, xR = colX(3), mx = (xL+xR)/2;
+    const yF = cardCY(3,0);
+    lines.push(<g key="sfin">
+      <line x1={xL} y1={yA} x2={mx} y2={yA} {...gp}/>
+      <line x1={xL} y1={yB} x2={mx} y2={yB} {...gp}/>
+      <line x1={mx} y1={yA} x2={mx} y2={yB} {...gp}/>
+      <line x1={mx} y1={(yA+yB)/2} x2={xR} y2={yF} {...gp}/>
+    </g>);
+  }
+
+  const divider = (label) => (
+    <div style={{display:'flex',alignItems:'center',gap:'8px',margin:'12px 0 8px'}}>
+      <span style={{flex:1,height:'1px',background:'#ede9f7'}}/>
+      <span style={{fontSize:'0.52rem',fontWeight:800,color:'#9333ea',textTransform:'uppercase',letterSpacing:'0.1em',whiteSpace:'nowrap'}}>{label}</span>
+      <span style={{flex:1,height:'1px',background:'#ede9f7'}}/>
+    </div>
+  );
+
+  return (
+    <div>
+      {/* Prelims — 2-column grid */}
+      {divider('Preliminary Round · Seeds 11–22 · 8:00–9:40am')}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'5px',marginBottom:'4px'}}>
+        {PLAYOFF_ROUNDS_16PLUS[0].matches.map(m => (
+          <PrelimCard key={m.id} match={m} sheetData={sheetData}/>
+        ))}
+      </div>
+
+      {/* Main bracket */}
+      {divider('Main Bracket · Round of 16 → Final')}
+      <div style={{display:'flex',gap:gap+'px',marginBottom:'5px'}}>
+        {['Round of 16','Quarter-Finals','Semi-Finals','🏆 Final'].map(h => (
+          <div key={h} style={{flex:1,textAlign:'center',fontSize:'0.47rem',fontWeight:700,color:'#bbb',textTransform:'uppercase',letterSpacing:'0.03em'}}>{h}</div>
+        ))}
+      </div>
+
+      {/* Bracket canvas — measures own width, positions cards absolutely */}
+      <div ref={cref} style={{position:'relative',height:totalH+'px',width:'100%'}}>
+        <svg style={{position:'absolute',top:0,left:0,width:'100%',height:totalH,pointerEvents:'none',overflow:'visible'}}>
+          {cw > 0 && lines}
+        </svg>
+
+        {R16_BRACKET.map((e,s) => (
+          <div key={e.matchId} style={{position:'absolute',left:colX(0)+'px',top:bCardTopDyn(0,s)+'px',width:cardW+'px'}}>
+            <BracketMatchCard matchData={mById[e.matchId]} sheetData={sheetData} roundLabel={e.label}/>
+          </div>
+        ))}
+        {QF_BRACKET.map((e,s) => (
+          <div key={e.matchId} style={{position:'absolute',left:colX(1)+'px',top:bCardTopDyn(1,s)+'px',width:cardW+'px'}}>
+            <BracketMatchCard matchData={mById[e.matchId]} sheetData={sheetData} roundLabel={e.label}/>
+          </div>
+        ))}
+        {SF_BRACKET.map((e,s) => (
+          <div key={e.matchId} style={{position:'absolute',left:colX(2)+'px',top:bCardTopDyn(2,s)+'px',width:cardW+'px'}}>
+            <BracketMatchCard matchData={mById[e.matchId]} sheetData={sheetData} roundLabel={e.label}/>
+          </div>
+        ))}
+        <div style={{position:'absolute',left:colX(3)+'px',top:bCardTopDyn(3,0)+'px',width:cardW+'px'}}>
+          <BracketMatchCard matchData={mById['fin']} sheetData={sheetData} roundLabel="FINAL" isChamp={true}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── 13-15 Bracket (responsive, no scroll) ────────────────────────────────────
+function Bracket1315({sheetData}) {
+  const cref = useRef(null);
+  const [cw, setCw] = useState(340);
+
+  useEffect(() => {
+    const measure = () => { if (cref.current) setCw(cref.current.offsetWidth); };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
+
+  const gap   = B_GAP;
+  const cardW = Math.max(60, Math.floor((cw - gap) / 2));
+  const SF_SH = 110; // slot height for SF matches
+  const totalH = 2 * SF_SH;
+
+  const sf1m = PLAYOFF_ROUNDS_1315[0].matches[0];
+  const sf2m = PLAYOFF_ROUNDS_1315[0].matches[1];
+  const finm = PLAYOFF_ROUNDS_1315[1].matches[0];
+
+  const sf1Top = (SF_SH - B_CARD_H) / 2;
+  const sf2Top = SF_SH + sf1Top;
+  const finTop = (totalH - B_CARD_H) / 2;
+  const sf1CY  = sf1Top + B_CARD_H / 2;
+  const sf2CY  = sf2Top + B_CARD_H / 2;
+  const finCY  = finTop + B_CARD_H / 2;
+  const sfR    = cardW;
+  const finL   = cardW + gap;
+  const midX   = (sfR + finL) / 2;
+
+  return (
+    <div>
+      <div style={{display:'flex',gap:gap+'px',marginBottom:'5px'}}>
+        {['Semi-Finals','🏆 Final'].map(h => (
+          <div key={h} style={{flex:1,textAlign:'center',fontSize:'0.47rem',fontWeight:700,color:'#bbb',textTransform:'uppercase',letterSpacing:'0.03em'}}>{h}</div>
+        ))}
+      </div>
+      <div ref={cref} style={{position:'relative',height:totalH+'px',width:'100%'}}>
+        <svg style={{position:'absolute',top:0,left:0,width:'100%',height:totalH,pointerEvents:'none',overflow:'visible'}}>
+          {cw > 0 && <>
+            <line x1={sfR} y1={sf1CY} x2={midX} y2={sf1CY} stroke="#d1d5db" strokeWidth={1.5}/>
+            <line x1={sfR} y1={sf2CY} x2={midX} y2={sf2CY} stroke="#d1d5db" strokeWidth={1.5}/>
+            <line x1={midX} y1={sf1CY} x2={midX} y2={sf2CY} stroke="#d1d5db" strokeWidth={1.5}/>
+            <line x1={midX} y1={finCY} x2={finL} y2={finCY} stroke="#f59e0b" strokeWidth={2}/>
+          </>}
+        </svg>
+        <div style={{position:'absolute',left:'0px',top:sf1Top+'px',width:cardW+'px'}}>
+          <BracketMatchCard matchData={sf1m} sheetData={sheetData} roundLabel="SF1"/>
+        </div>
+        <div style={{position:'absolute',left:'0px',top:sf2Top+'px',width:cardW+'px'}}>
+          <BracketMatchCard matchData={sf2m} sheetData={sheetData} roundLabel="SF2"/>
+        </div>
+        <div style={{position:'absolute',left:finL+'px',top:finTop+'px',width:cardW+'px'}}>
+          <BracketMatchCard matchData={finm} sheetData={sheetData} roundLabel="FINAL" isChamp={true}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Playoff View ─────────────────────────────────────────────────────────────
+function PlayoffView({sheetData, hasLive}) {
+  const [activeDiv, setActiveDiv] = useState('16+');
+
+  const divStyle = (d) => activeDiv===d
+    ? {background:'linear-gradient(135deg,#5b1fa8,#7b2fbe)',color:'white',border:'none',
+       padding:'7px 20px',borderRadius:'20px',fontWeight:700,fontSize:'0.72rem',cursor:'pointer',
+       boxShadow:'0 2px 8px rgba(91,31,168,0.3)'}
+    : {background:'white',color:'#666',border:'1.5px solid #e0e0ea',
+       padding:'7px 20px',borderRadius:'20px',fontWeight:700,fontSize:'0.72rem',cursor:'pointer'};
+
+  return (
+    <div>
+      {/* Division sub-tabs */}
+      <div style={{display:'flex',gap:'8px',padding:'10px 0 12px',justifyContent:'center'}}>
+        <button style={divStyle('16+')}   onClick={()=>setActiveDiv('16+')}>⚽ 16+ Division</button>
+        <button style={divStyle('13-15')} onClick={()=>setActiveDiv('13-15')}>⚽ 13–15 Division</button>
+      </div>
+
+      {activeDiv === '16+' && (
+        <div>
+          <div className="playoff-note" style={{marginBottom:'10px'}}>
+            <strong>16+ Division Playoffs · April 5 · Houston Soccer Field</strong><br/>
+            Seeds 1–10 received byes · 22 teams · single elimination · Fields 7A/7B/7C
+          </div>
+          <Bracket16Plus sheetData={sheetData}/>
+        </div>
+      )}
+      {activeDiv === '13-15' && (
+        <div>
+          <div className="playoff-note" style={{marginBottom:'10px'}}>
+            <strong>13–15 Division Playoffs · April 5 · Houston Soccer Field</strong><br/>
+            4-team single elimination · Fields 5A & 5B
+          </div>
+          <Bracket1315 sheetData={sheetData}/>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SettingsPanel({apiKey, onSave, onClose}) {
   const [val, setVal] = useState(apiKey||'');
   return (
@@ -803,6 +1364,7 @@ function App() {
   const [activeGroup, setActiveGroup] = useState('13-15');
   const [activeNav,   setActiveNav]   = useState('Standings');
   const [scores, setScores]           = useState({});
+  const [playoffData, setPlayoffData] = useState({});
   const [apiKey, setApiKey]           = useState(DEFAULT_API_KEY);
   const [showSettings, setShowSettings] = useState(false);
   const [syncing, setSyncing]         = useState(false);
@@ -816,13 +1378,16 @@ function App() {
     if (!apiKey) { setShowSettings(true); return; }
     setSyncing(true); setSyncError('');
     try {
-      const newScores = await syncAllScores(apiKey);
+      const [newScores, newPlayoff] = await Promise.all([
+        syncAllScores(apiKey),
+        fetchPlayoffData(apiKey),
+      ]);
       setScores(prev => {
-        // Live scores override manual; manual scores kept for unmatched matches
         const merged = {...prev};
         Object.entries(newScores).forEach(([id,sc]) => { merged[id] = sc; });
         return merged;
       });
+      if (Object.keys(newPlayoff).length > 0) setPlayoffData(newPlayoff);
       setLastSync(new Date());
     } catch(e) {
       setSyncError(e.message || 'Sync failed');
@@ -844,11 +1409,12 @@ function App() {
   const totalPlayed = Object.values(scores).filter(s=>s?.played).length;
   // Exclude the virtual '16+' group to avoid double-counting A-E matches
   const totalMatches = GK.filter(k=>k!=='16+').reduce((a,k)=>a+GROUPS[k].matches.length, 0);
-  const standings = useMemo(()=>computeStandings(activeGroup,scores),[activeGroup,scores]);
-  const grp = GROUPS[activeGroup];
-  const gPlayed = grp.matches.filter(m=>scores[m.id]?.played).length;
-  const leader = standings[0];
-  const hasLive = Object.values(scores).some(s=>s?.fromSheets);
+  const isPlayoffs = activeGroup === 'Playoffs';
+  const standings = useMemo(()=>isPlayoffs ? [] : computeStandings(activeGroup,scores),[activeGroup,scores,isPlayoffs]);
+  const grp = isPlayoffs ? null : GROUPS[activeGroup];
+  const gPlayed = grp ? grp.matches.filter(m=>scores[m.id]?.played).length : 0;
+  const leader = standings[0] || {pts:0,team:''};
+  const hasLive = Object.values(scores).some(s=>s?.fromSheets) || Object.keys(playoffData).length > 0;
 
   const fmtTime = d => d ? d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : null;
 
@@ -880,12 +1446,21 @@ function App() {
               {GROUPS[k].tab}
             </div>
           ))}
+          <div
+            className={`gpill ${activeGroup==='Playoffs'?'active':''}`}
+            style={activeGroup==='Playoffs'?{background:'linear-gradient(135deg,#5b1fa8,#7b2fbe)',borderColor:'#5b1fa8',color:'white'}:{}}
+            onClick={()=>setActiveGroup('Playoffs')}
+          >
+            🏆 Playoffs
+          </div>
         </div>
-        <div className="nav-tabs">
-          {['Standings','Schedule','Fair Play'].map(t=>(
-            <div key={t} className={`nav-tab ${activeNav===t?'active':''}`} onClick={()=>setActiveNav(t)}>{t}</div>
-          ))}
-        </div>
+        {activeGroup !== 'Playoffs' && (
+          <div className="nav-tabs">
+            {['Standings','Schedule','Fair Play'].map(t=>(
+              <div key={t} className={`nav-tab ${activeNav===t?'active':''}`} onClick={()=>setActiveNav(t)}>{t}</div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Sync bar */}
@@ -920,27 +1495,32 @@ function App() {
 
       {/* Content */}
       <div className="content">
-        {/* Stats strip */}
-        <div className="strip" style={{marginTop:'12px'}}>
-          <div className="strip-card">
-            <div className="strip-val">{gPlayed}/{grp.matches.length}</div>
-            <div className="strip-lbl">Played</div>
-          </div>
-          <div className="strip-card">
-            <div className="strip-val" style={{fontSize:leader.pts>0?'0.9rem':'1.25rem',paddingTop:'2px'}}>
-              {leader.pts>0 ? leader.team.split(' ')[0] : '—'}
+        {isPlayoffs ? (
+          <PlayoffView sheetData={playoffData} hasLive={Object.keys(playoffData).length>0}/>
+        ) : (
+          <>
+            {/* Stats strip */}
+            <div className="strip" style={{marginTop:'12px'}}>
+              <div className="strip-card">
+                <div className="strip-val">{gPlayed}/{grp.matches.length}</div>
+                <div className="strip-lbl">Played</div>
+              </div>
+              <div className="strip-card">
+                <div className="strip-val" style={{fontSize:leader.pts>0?'0.9rem':'1.25rem',paddingTop:'2px'}}>
+                  {leader.pts>0 ? leader.team.split(' ')[0] : '—'}
+                </div>
+                <div className="strip-lbl">Leader</div>
+              </div>
+              <div className="strip-card">
+                <div className="strip-val">{leader.pts>0?leader.pts:'—'}</div>
+                <div className="strip-lbl">Top Pts</div>
+              </div>
             </div>
-            <div className="strip-lbl">Leader</div>
-          </div>
-          <div className="strip-card">
-            <div className="strip-val">{leader.pts>0?leader.pts:'—'}</div>
-            <div className="strip-lbl">Top Pts</div>
-          </div>
-        </div>
-
-        {activeNav==='Standings' && <StandingsView gk={activeGroup} scores={scores}/>}
-        {activeNav==='Schedule'  && <ScheduleView  gk={activeGroup} scores={scores}/>}
-        {activeNav==='Fair Play' && <CardsView     gk={activeGroup} scores={scores}/>}
+            {activeNav==='Standings' && <StandingsView gk={activeGroup} scores={scores}/>}
+            {activeNav==='Schedule'  && <ScheduleView  gk={activeGroup} scores={scores}/>}
+            {activeNav==='Fair Play' && <CardsView     gk={activeGroup} scores={scores}/>}
+          </>
+        )}
       </div>
 
       <div className="footer">
